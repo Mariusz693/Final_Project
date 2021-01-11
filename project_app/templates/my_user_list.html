@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %} MyUser List {% endblock %}
+{% block content %}
+    <div class="container my-container">
+        {% if message %}
+            <div class="row">
+                <h3>Lista pacjentów w bazie danych</h3>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <form action="/patient_list/" method="GET">
+                        <div>
+                            <button type="submit" name="sorted" value="1" class="btn btn-success">Wszyscy</button>
+                            <button type="submit" name="sorted" value="2" class="btn btn-success">Aktualnie na turnusie</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        {% else %}
+            <div class="row">
+                <div class="col">
+                    <h3>Lista rehabilitantów w bazie danych</h3>
+                </div>
+            </div>
+        {% endif %}
+        <table class="table border-table">
+            <thead>
+                <tr class="d-flex">
+                    <th scope="col" class="col-3">IMIĘ I NAZWISKO</th>
+                    <th scope="col" class="col-2">NICK</th>
+                    <th scope="col" class="col-2">EMAIL</th>
+                    <th scope="col" class="col-2">NR  TELEFONU</th>
+                    <th scope="col" class="col-3 text-center">AKCJE</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for my_user in my_user_list %}
+                    <tr class="d-flex">
+                        <th scope="row" class="col-3">{{ my_user.first_name }} {{ my_user.last_name }}</th>
+                        <td class="col-2">
+                            <a href="/patient_timetable/{{ my_user.id }}/">{{ my_user.username }}</a>
+                        </td>
+                        <td class="col-2">{{ my_user.email }}</td>
+                        <td class="col-2">{{ my_user.tel_number }}</td>
+                        <td class="col-3 d-flex align-items-center justify-content-center flex-wrap">
+                            <a class="btn btn-info my-navbar-button" href="/my_user_edit/{{ my_user.id }}/">Edytuj</a>
+                            <a class="btn btn-info my-navbar-button" href="/my_user_password/{{ my_user.id }}/">Hasło</a>
+                            <a class="btn btn-danger my-navbar-button" href="/my_user_delete/{{ my_user.id }}/">Usuń</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="6">Brak osób w bazie</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

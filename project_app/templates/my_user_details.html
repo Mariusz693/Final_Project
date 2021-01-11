@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %} MyUser Details {% endblock %}
+{% block content %}
+    <div class="container my-container">
+        <table class="table">
+            <thead>
+                <tr class="d-flex">
+                    <th scope="col" class="col-3">Nick:</th>
+                    <td class="col">{{ my_user.username }}</td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="d-flex">
+                    <th scope="col" class="col-3">Imię:</th>
+                    <td class="col">{{ my_user.first_name }}</td>
+                </tr>
+                <tr class="d-flex">
+                    <th scope="col" class="col-3">Nazwisko:</th>
+                    <td class="col">{{ my_user.last_name }}</td>
+                </tr>
+                <tr class="d-flex">
+                    <th scope="col" class="col-3">Email:</th>
+                    <td class="col">{{ my_user.email }}</td>
+                </tr>
+                <tr class="d-flex">
+                    <th scope="col" class="col-3">Numer telefonu:</th>
+                    <td class="col">{{ my_user.tel_number }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <div>
+            <a class="btn btn-info" href="/my_user_edit/{{ my_user.id }}">Edytuj dane</a>
+            <a class="btn btn-info" href="/my_user_password/{{ my_user.id }}">Zmień hasło</a>
+        </div>
+    </div>
+{% endblock %}

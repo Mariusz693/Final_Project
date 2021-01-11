@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %} MyUser Delete {% endblock %}
+{% block content %}
+    <div class="container my-container">
+        <div class="form-control">
+            <h3>Usuń: {{ myuser.first_name }} {{ myuser.last_name }}, status: {{ myuser.get_status_display }}</h3>
+            <form action="" method="POST">
+                {%  csrf_token %}
+                {{ form.as_p }}
+                <div class="row">
+                    <div class="col">
+                        <input type="submit" name="button" class="btn btn-success" value="Potwierdź">
+                    </div>
+                    <div class="col d-flex justify-content-end">
+                        <input type="submit" name="button" class="btn btn-danger" value="Anuluj">
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

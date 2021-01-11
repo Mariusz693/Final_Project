@@ -20,4 +20,13 @@ from project_app import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.IndexView.as_view(), name='index'),
+    path('login/', views.MyUserLoginView.as_view(), name='login'),
+    path('logout/', views.MyUserLogoutView.as_view(), name='logout'),
+    path('patient_list/', views.PatientListView.as_view(), name='patient-list'),
+    path('employee_list/', views.EmployeeListView.as_view(), name='employee-list'),
+    path('my_user_add/', views.MyUserCreateView.as_view(), name='my-user-add'),
+    path('my_user_delete/<int:pk>/', views.MyUserDeleteView.as_view(), name='my-user-delete'),
+    path('my_user_edit/<int:id_my_user>/', views.MyUserUpdateView.as_view(), name='my-user-edit'),
+    path('my_user_details/<int:id_my_user>/', views.MyUserDetailsView.as_view(), name='my-user-details'),
+    path('my_user_password/<int:id_my_user>/', views.MyUserPasswordView.as_view(), name='my-user-password'),
 ]

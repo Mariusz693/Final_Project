@@ -5,20 +5,32 @@ body {
 }
 
 
-.footer {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    height: 60px;
-    line-height: 60px;
-    /*background-color: #f5f5f5;*/
-    background-color: rgba(245, 245, 245, 0.3);
-}
+/*.footer {*/
+/*    !*position: absolute;*!*/
+/*    bottom: 0;*/
+/*    width: 100%;*/
+/*    height: 60px;*/
+/*    line-height: 60px;*/
+/*    !*background-color: #f5f5f5;*!*/
+/*    background-color: rgba(245, 245, 245, 0.3);*/
+/*}*/
 
-.con {
+.my-container {
     margin-top: 25px;
 }
 
-.navbar-txt {
-    margin-right: 10px;
+.my-navbar-text {
+    margin: 5px;
+}
+
+.my-navbar-button {
+    margin: 5px;
+}
+
+/*.my-table-button {*/
+/*    margin: 5px;*/
+/*}*/
+
+.my-navbar-form {
+    margin: 5px;
 }

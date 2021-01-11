@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %} MyUser Edit {% endblock %}
+{% block content %}
+    <div class="container my-container">
+        <div class="form-control">
+            {% if request.user.status == 1 %}
+                <h3>Edycja danych: {{ my_user.first_name }} {{ my_user.last_name }}</h3>
+            {% else %}
+                <h3>Edycja danych</h3>
+            {% endif %}
+            {% if message %}
+                <h4 class="text-danger">{{ message }}</h4>
+            {% endif %}
+            <form action="" method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <div class="row">
+                    <div class="col">
+                        <input type="submit" name="button" class="btn btn-success" value="Potwierdź">
+                    </div>
+                    <div class="col d-flex justify-content-end">
+                        <input type="submit" name="button" class="btn btn-danger" value="Anuluj">
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

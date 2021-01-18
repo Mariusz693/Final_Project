@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %} Reservation Add {% endblock %}
+{% block content %}
+    <div class="container my-container">
+        <div class="row">
+            {% if reservation %}
+                <div class="col">
+                    <h3>Edycja rezerwacji: {{ room }}</h3>
+                </div>
+            {% else %}
+                <div class="col">
+                    <h3>Rezerwacja: {{ room }}</h3>
+                </div>
+            {% endif %}
+        </div>
+        <form class="form-control" action="" method="POST">
+            {% if message %}
+                <h4 class="text-danger">{{ message }}</h4>
+            {% endif %}
+            {% csrf_token %}
+            <input type="hidden" name="room_id" value="{{ room.id }}">
+            <input type="hidden" name="start" value="{{ start }}">
+            <input type="hidden" name="end" value="{{ end }}">
+            <p>
+                <label for="start_reservation">Data rozpoczęcia:</label>
+                <input type="date" name="start_reservation" id="start_reservation" required max="{{ end }}"
+                       min="{{ start }}" {% if reservation %} value="{{ reservation.start_reservation_change }}" {% endif %}>
+{#                       min="{{ start }}" {% if reservation %} value="{{ reservation.start_reservation|date:"Y-M-d" }}" {% endif %}>#}
+            </p>
+            <p>
+                <label for="end_reservation">Data zakończenia:</label>
+                <input type="date" name="end_reservation" id="end_reservation" required max="{{ end }}"
+                       min="{{ start }}" {% if reservation %} value="{{ reservation.end_reservation_change }}" {% endif %}>
+            </p>
+            <p>
+                <label for="patient_id">Pacjent:</label>
+                <select name="patient_id" id="patient_id" required>
+                    <option value="">---------</option>
+                    {% for patient in patient_list %}
+                        <option value="{{ patient.id }}" {% if reservation.patient == patient %} selected {% endif %}>
+                            {{ patient }}
+                        </option>
+                    {% empty %}
+                        <option value="0">Brak pacjentów w bazie</option>
+                    {% endfor %}
+                </select>
+            </p>
+            <p>
+                <label for="message">Notatka:</label>
+                <textarea style="width: 100%" name="message"
+                          id="message">{% if reservation %}{{ reservation.message }}{% endif %}</textarea>
+            </p>
+            <div class="row">
+                <div class="col">
+                    {% if reservation %}
+                        <input type="submit" name="button" class="btn btn-success" value="Zapisz">
+                        <input type="submit" name="button" class="btn btn-danger" value="Usuń">
+                    {% else %}
+                        <input type="submit" class="btn btn-success" value="Dodaj">
+                    {% endif %}
+                </div>
+                <div class="col d-flex justify-content-end">
+                    <a class="btn btn-danger" onclick="history.back();">Anuluj</a>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}

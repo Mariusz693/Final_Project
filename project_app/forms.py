@@ -1,7 +1,6 @@
 from django import forms
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
-
 from .validators import validate_tel_number
 
 
@@ -27,7 +26,7 @@ class MyUserCreateForm(forms.Form):
     last_name = forms.CharField(label='Nazwisko', max_length=64)
     email = forms.EmailField()
     tel_number = forms.CharField(label='Telefon', validators=[validate_tel_number])
-    status = forms.ChoiceField(choices=((3, 'Pacjent'), (2, 'Rehabilitant')))
+    status = forms.ChoiceField(choices=((3, 'Pacjent'), (2, 'Rehabilitant')), widget=forms.RadioSelect)
     password = forms.CharField(label='Hasło', max_length=64)
     repeat_password = forms.CharField(label='Powtórz hasło', max_length=64)
 
@@ -44,7 +43,7 @@ class MyUserUpdateForm(forms.Form):
     nick = forms.CharField(label='Nick', max_length=64)
     first_name = forms.CharField(label='Imię',max_length=64)
     last_name = forms.CharField(label='Nazwisko', max_length=64)
-    tel_number = forms.CharField(label='Telefon', max_length=9)
+    tel_number = forms.CharField(label='Telefon', validators=[validate_tel_number])
     email = forms.EmailField()
 
 

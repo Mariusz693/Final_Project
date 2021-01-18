@@ -11,6 +11,9 @@ class MyUser(AbstractUser):
     tel_number = models.CharField(max_length=9)
     status = models.SmallIntegerField(choices=STATUS_CHOICE, default=3)
 
+    def __str__(self):
+        return self.first_name + ' ' + self.last_name
+
     def set_permissions(self):
         if self.status == 1:
             self.user_permissions.set(
@@ -20,7 +23,7 @@ class MyUser(AbstractUser):
             )
         if self.status == 2 or self.status == 3:
             self.user_permissions.set((
-                    Permission.objects.get(codename__icontains='delete_myuser'),
+                    # Permission.objects.get(codename__icontains='delete_myuser'),
                     Permission.objects.get(codename__icontains='change_myuser'),
                     Permission.objects.get(codename__icontains='view_myuser')
                 )
@@ -29,6 +32,9 @@ class MyUser(AbstractUser):
 
 class Room(models.Model):
     room_number = models.SmallIntegerField(unique=True)
+
+    def __str__(self):
+        return f'Pokój nr {self.room_number}'
 
 
 class Reservation(models.Model):

@@ -27,10 +27,34 @@ body {
     margin: 5px;
 }
 
-/*.my-table-button {*/
-/*    margin: 5px;*/
-/*}*/
+.my-form {
+     margin: 10px;
+}
+
+.my-table-button {
+    margin: 2.5px 5px;
+}
 
 .my-navbar-form {
     margin: 5px;
+}
+
+.my-month-button {
+    margin-left: 5px;
+}
+h3 {
+    margin-left: 10px;
+}
+
+.my-table-border{
+    border: double;
+}
+
+.my-table-room-list {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.my-search-input {
+    margin-right: 5px;
 }

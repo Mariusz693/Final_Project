@@ -2,23 +2,25 @@
 {% block title %} Login {% endblock %}
 {% block content %}
     <div class="container my-container">
-        <div class="form-control">
-            <h2>Logowanie</h2>
+        <div class="row">
+            <div class="col">
+                <h3>Logowanie</h3>
+            </div>
+        </div>
+        <form class="form-control" action="" method="POST">
             {% if message %}
                 <h4 class="text-danger">{{ message }}</h4>
             {% endif %}
-            <form action="" method="POST">
-                {% csrf_token %}
-                {{ form.as_p }}
-                <div class="row">
-                    <div class="col">
-                        <input type="submit" class="btn btn-success" value="Zaloguj">
-                    </div>
-                    <div class="col d-flex justify-content-end">
-                        <a href="../" class="btn btn-danger">Anuluj</a>
-                    </div>
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="row">
+                <div class="col">
+                    <input type="submit" class="btn btn-success" value="Zaloguj">
                 </div>
-            </form>
-        </div>
+                <div class="col d-flex justify-content-end">
+                    <a class="btn btn-danger" onclick="history.back();">Anuluj</a>
+                </div>
+            </div>
+        </form>
     </div>
 {% endblock %}

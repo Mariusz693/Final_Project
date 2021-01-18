@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %} Reservation {% endblock %}
+{% block content %}
+    <div class="container my-container">
+        <div class="row">
+            <div class="col">
+                <h3>Terminarz</h3>
+            </div>
+        </div>
+        <form class="my-form" action="" method="GET">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col">
+                    <b>{{ my_month.3 }} {{ my_month.1 }}</b>
+                    {% if button_active.0 %}
+                        <button type="submit" name="button" class="btn btn-success" value="prev_month"> < Poprzedni</button>
+                    {% endif %}
+                    {% if button_active.1 %}
+                         <button type="submit" name="button" class="btn btn-success" value="next_month"> Następny > </button>
+                    {% endif %}
+                </div>
+                <div class="col d-flex justify-content-end">
+                    <label for="month_look"></label>
+                    <select class="custom-select" id="month_look" name="month_look">
+                        {% for month in my_list %}
+                        <option value="{{ month.0 }}" {% if month.0 == my_month.0 %} selected {% endif %}> {{ month.3 }} {{ month.1 }} </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" name="button" class="btn btn-success my-month-button" value="check_month"> Pokaż </button>
+                </div>
+            </div>
+        </form>
+        <table class="table table-bordered my-table-border" style="table-layout:fixed">
+            <thead>
+            <tr>
+                <th class="col-2" rowspan="2">Numer pokoju</th>
+                {% for week in week_list %}
+                    <th colspan="7" class="text-center"> {{ forloop.counter }} tydzień <br> {{ week.0 }} - {{ week.6 }}</th>
+                {% endfor %}
+            </tr>
+            <tr>
+                {% for day in day_name %}
+                    <th style="padding: 1px">{{ day }}</th>
+                {% endfor %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for room in rooms %}
+                <tr>
+                    <td><p class="my-table-room-list">{{ room }}</p></td>
+                    {% for item in room.reserve %}
+                        {% if item.0 %}
+                            <td colspan="{{ item.1 }}" style="background-color: #6ebe96;">
+                                <a class="nav-link" href="/reservation_edit/{{ item.2.id }}/"> {{ item.2.patient }}</a>
+                            </td>
+                        {% else %}
+                            <td colspan="{{ item.1 }}">
+{#                                <a class="nav-link" href="/reservation_add/?room={{ room.id }}&start={{ item.2|date:"SHORT_DATE_FORMAT" }}&end={{ item.3.year }}-{{ item.3.month }}-{{ item.3.day }}">...</a>#}
+                                <a class="nav-link" href="/reservation_add/?room={{ room.id }}&start={{ item.2.year }}-{{ item.2.month }}-{{ item.2.day }}&end={{ item.3.year }}-{{ item.3.month }}-{{ item.3.day }}">...</a>
+                            </td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {{ calendar }}
+    </div>
+{% endblock %}

@@ -29,4 +29,7 @@ urlpatterns = [
     path('my_user_edit/<int:id_my_user>/', views.MyUserUpdateView.as_view(), name='my-user-edit'),
     path('my_user_details/<int:id_my_user>/', views.MyUserDetailsView.as_view(), name='my-user-details'),
     path('my_user_password/<int:id_my_user>/', views.MyUserPasswordView.as_view(), name='my-user-password'),
+    path('reservation/', views.ReservationView.as_view(), name='reservation'),
+    path('reservation_add/', views.ReservationAddView.as_view(), name='reservation-add'),
+    path('reservation_edit/<int:id_reservation>/', views.ReservationEditView.as_view(), name='reservation-edit'),
 ]

@@ -2,6 +2,9 @@
 {% block title %} MyUser Details {% endblock %}
 {% block content %}
     <div class="container my-container">
+        <div class="row">
+            <h3>Szczegóły osoby, status {{ my_user.get_status_display }} </h3>
+        </div>
         <table class="table">
             <thead>
                 <tr class="d-flex">

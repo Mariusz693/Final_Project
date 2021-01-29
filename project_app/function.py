@@ -1,104 +1,43 @@
-from calendar import HTMLCalendar, LocaleHTMLCalendar
+from calendar import LocaleHTMLCalendar, calendar
 import datetime
+import calendar
 
 
-CHOICE_MONTH = (
-    (0, 'Grudzień', 'XII'),
-    (1, 'Styczeń', 'I'),
-    (2, 'Luty', 'II'),
-    (3, 'Marzec', 'III'),
-    (4, 'Kwiecień', 'IV'),
-    (5, 'Maj', 'V'),
-    (6, 'Czerwiec', 'VI'),
-    (7, 'Lipiec', 'VII'),
-    (8, 'Sierpień', 'VIII'),
-    (9, 'Wrzesień', 'IX'),
-    (10, 'Październik', 'X'),
-    (11, 'Listopad', 'XI'),
-    (12, 'Grudzień', 'XII'),
-    (13, 'Styczeń', 'I'),
-)
-CHOICE_WEEK = ('Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd')
+DAY_NAMES = ('Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd')
 
 
 class Calendar(LocaleHTMLCalendar):
     def __init__(self):
         super(Calendar, self).__init__()
-    #
-    # def formatmonth(self, year, month, withyear=True):  # funkcja dla formatu miesiaca z calendar.py
-    #     self.year, self.month = year, month
-    #     super(Calendar, self).formatmonth(year, month)
-    #     v = []
-    #     a = v.append
-    #     a('<table class="table table-striped table-bordered">')  # tutaj zmiana na tabele bootstrapa
-    #     a('\n')
-    #     a(self.formatmonthname(year, month, withyear=withyear))
-    #     a('\n')
-    #     a(self.formatweekheader())
-    #     a('\n')
-    #     for week in self.monthdays2calendar(year, month):
-    #         a(self.formatweek(week))
-    #     a('</table>')
-    #     return ''.join(v)
-
-#
-# def calendar(request, year=2021, month=1):
-#     year = int(year)
-#     month = int(month)
-#     form = MonthForm()
-#     if True:
-#         cal = Calendar().formatmonth(year, month)
-#         return render(
-#             request,
-#             'timetable.html',
-#             context={'form': form, 'calendar': mark_safe(cal)}
-#         )
 
 
-def generate_month(my_month, my_list):
-    day_list = []
+def generate_month(month_look):
+
     week_list = []
+    day_list = []
     day_name = []
-    cal = Calendar().monthdatescalendar(my_month[1], my_month[2])
-    for j in range(len(cal)):
-        week_list.append([])
-        for i in range(7):
-            week_list[j].append(f'{cal[j][i].day}.{my_list[cal[j][i].month-1][4]}')
-            day_list.append(cal[j][i])
-            day_name.append(CHOICE_WEEK[i])
+    cal = Calendar().monthdatescalendar(month_look.year, month_look.month)
+    if cal[0].index(month_look) > 4:
+        cal = cal[1:]
+
+    for week in cal:
+        week_list.append(f'{week[0].day}.{week[0].month} - {week[6].day}.{week[6].month}')
+        for i, day in enumerate(week):
+            day_list.append(day)
+            day_name.append(DAY_NAMES[i])
 
     return [week_list, day_list, day_name]
 
-# def generate_month(my_month, my_list):
-#     day_month = []
-#     day_week = []
-#     day_name = []
-#     cal = Calendar().monthdayscalendar(my_month[1], my_month[2])
-#     print(cal)
-#     # for j in range(len(cal)):
-#     #     day_week.append([])
-#     #     for i in range(7):
-#     #         day_week[j].append(f'{cal[j][i].day}.{my_list[cal[j][i].month-1][4]}')
-#     #         day_month.append(cal[j][i])
-#     #         day_name.append(CHOICE_WEEK[i])
-#     return [day_week, day_month, day_name]
-
 
 def generate_list():
-    today = datetime.datetime.today()
-    # today = today + datetime.timedelta(days=60)
+
+    today = datetime.date.today()
     my_list = []
-    year = today.year
+    year = today.year - 1
     month = today.month
-    for i in range(24):
-        my_list.append([
-            i+1,
-            year,
-            month,
-            CHOICE_MONTH[month][1],
-            CHOICE_MONTH[month][2],
-            datetime.date(year=year, month=month, day=1)
-        ])
+    for i in range(36):
+        next_month = datetime.date(year=year, month=month, day=1)
+        my_list.append([next_month, str(next_month)])
         month += 1
         if month > 12:
             month = 1
@@ -107,21 +46,55 @@ def generate_list():
     return my_list
 
 
-def change_date(my_date):
+def change_day_to_data(my_date):
+
     table = my_date.split('-')
-    if len(table[1]) == 1:
-        table[1] = '0' + table[1]
-    if len(table[2]) == 1:
-        table[2] = '0' + table[2]
+    year = int(table[0])
+    month = int(table[1])
+    day = int(table[2])
 
-    return '-'.join(table)
+    return datetime.date(year=year, month=month, day=day)
 
 
-def change_date2(my_date):
-    table = [str(my_date.year), str(my_date.month), str(my_date.day)]
-    if len(table[1]) == 1:
-        table[1] = '0' + table[1]
-    if len(table[2]) == 1:
-        table[2] = '0' + table[2]
+def set_day_look():
+    today = datetime.date.today()
+    day_of_week = calendar.weekday(today.year, today.month, today.day)
+    if day_of_week < 5:
+        day_look = today - datetime.timedelta(days=day_of_week)
+    elif day_of_week == 5:
+        day_look = today + datetime.timedelta(days=2)
+    else:
+        day_look = today + datetime.timedelta(days=1)
 
-    return '-'.join(table)
+    return str(day_look)
+
+
+def generate_week_timetable(my_day):
+
+    day_of_week = calendar.weekday(my_day.year, my_day.month, my_day.day)
+    week_start = my_day - datetime.timedelta(days=day_of_week)
+    week_end = week_start + datetime.timedelta(days=4)
+    week_list = []
+    for i in range(5):
+        day_week = week_start + datetime.timedelta(days=i)
+        week_list.append([day_week, str(day_week)])
+    prev_week_start = week_start - datetime.timedelta(days=7)
+    next_week_start = week_start + datetime.timedelta(days=7)
+    change_list = [week_start, week_end, str(prev_week_start), str(next_week_start)]
+
+    return [my_day, week_list, change_list]
+
+
+def generate_week_user(my_day):
+
+    week_start = my_day
+    week_end = week_start + datetime.timedelta(days=4)
+    prev_week_start = week_start - datetime.timedelta(days=7)
+    next_week_start = week_start + datetime.timedelta(days=7)
+    change_list = [week_start, week_end, str(prev_week_start), str(next_week_start)]
+    week_list = []
+    for i in range(5):
+        day_week = week_start + datetime.timedelta(days=i)
+        week_list.append(day_week)
+
+    return [change_list, week_list]

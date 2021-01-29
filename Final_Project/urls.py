@@ -32,4 +32,9 @@ urlpatterns = [
     path('reservation/', views.ReservationView.as_view(), name='reservation'),
     path('reservation_add/', views.ReservationAddView.as_view(), name='reservation-add'),
     path('reservation_edit/<int:id_reservation>/', views.ReservationEditView.as_view(), name='reservation-edit'),
+    path('reservation_delete/<int:pk>/', views.ReservationDeleteView.as_view(), name='reservation-delete'),
+    path('timetable/', views.TimetableView.as_view(), name='timetable'),
+    path('timetable/<int:id_my_user>/', views.TimetableUserView.as_view(), name='timetable-user'),
+    path('reservation/<int:id_my_user>/', views.ReservationUserView.as_view(), name='reservation-patient'),
+    # path('timetable/<str:my_day>/edit', views.TimetableEditView.as_view(), name='timetable-edit'),
 ]

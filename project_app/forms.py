@@ -7,9 +7,7 @@ from .validators import validate_tel_number
 class MyUserLoginForm(forms.Form):
 
     username = forms.CharField(label='Login', max_length=64)
-    # password = forms.CharField(label='Hasło', max_length=254, widget=forms.PasswordInput())
-
-    password = forms.CharField(label='Hasło', max_length=64)
+    password = forms.CharField(label='Hasło', max_length=64, widget=forms.PasswordInput())
 
     def authenticate_user(self):
         username = self.cleaned_data['username']
@@ -25,10 +23,10 @@ class MyUserCreateForm(forms.Form):
     first_name = forms.CharField(label='Imię', max_length=64)
     last_name = forms.CharField(label='Nazwisko', max_length=64)
     email = forms.EmailField()
-    tel_number = forms.CharField(label='Telefon', validators=[validate_tel_number])
+    tel_number = forms.CharField(label='Telefon (+48)', validators=[validate_tel_number])
     status = forms.ChoiceField(choices=((3, 'Pacjent'), (2, 'Rehabilitant')), widget=forms.RadioSelect)
-    password = forms.CharField(label='Hasło', max_length=64)
-    repeat_password = forms.CharField(label='Powtórz hasło', max_length=64)
+    password = forms.CharField(label='Hasło', max_length=64, widget=forms.PasswordInput())
+    repeat_password = forms.CharField(label='Powtórz hasło', max_length=64, widget=forms.PasswordInput())
 
     def clean(self):
         super(MyUserCreateForm, self).clean()
@@ -41,16 +39,14 @@ class MyUserCreateForm(forms.Form):
 class MyUserUpdateForm(forms.Form):
 
     nick = forms.CharField(label='Nick', max_length=64)
-    first_name = forms.CharField(label='Imię',max_length=64)
-    last_name = forms.CharField(label='Nazwisko', max_length=64)
-    tel_number = forms.CharField(label='Telefon', validators=[validate_tel_number])
+    tel_number = forms.CharField(label='Telefon (+48)', validators=[validate_tel_number])
     email = forms.EmailField()
 
 
 class MyUserPasswordForm(forms.Form):
 
-    password = forms.CharField(label='Hasło', max_length=64)
-    repeat_password = forms.CharField(label='Powtórz hasło', max_length=64)
+    password = forms.CharField(label='Hasło', max_length=64, widget=forms.PasswordInput())
+    repeat_password = forms.CharField(label='Powtórz hasło', max_length=64, widget=forms.PasswordInput())
 
     def clean(self):
         super(MyUserPasswordForm, self).clean()

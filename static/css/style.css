@@ -16,7 +16,7 @@ body {
 /*}*/
 
 .my-container {
-    margin-top: 25px;
+    margin-top: 10px;
 }
 
 .my-navbar-text {
@@ -47,7 +47,7 @@ h3 {
 }
 
 .my-table-border{
-    border: double;
+    border: double green;
 }
 
 .my-table-room-list {
@@ -57,4 +57,44 @@ h3 {
 
 .my-search-input {
     margin-right: 5px;
+}
+
+.my-timetable-patient{
+    display: flex;
+    align-items: flex-end;
+}
+
+.my-timetable-table {
+    height: 100px;
+    vertical-align: middle;
+    align-items: center;
+}
+
+.my-h5 {
+    margin-left: 10px;
+}
+
+.my-change-week {
+    margin: 10px;
+}
+
+.my-change-div {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.my-patient {
+    margin: 5px;
+    background-color: white;
+    height: 35px;
+    width: 80%;
+    border: black solid 1px;
+    border-radius: 5px;
+    text-align: center;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.my-timetable-hours {
+
 }

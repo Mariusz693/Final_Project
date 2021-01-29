@@ -5,25 +5,28 @@
         {% if message %}
             <div class="row">
                 <div class="col">
-                    <h3>Lista pacjentów w bazie danych</h3>
+                    {% if message == 1 %}
+                        <h3>Lista pacjentów w bazie danych</h3>
+                    {% elif message == 2 %}
+                        <h3>Lista pacjentów obecnych w ośrodku</h3>
+                    {% else %}
+                        <h3>Wyniki wyszukiwania dla: "{{ message }}"</h3>
+                    {% endif %}
                 </div>
             </div>
-                <div class="row">
-                    <div class="col">
-                        <form action="/patient_list/" method="GET">
-                            <a href="/patient_list/" class="btn btn-success">Wszyscy</a>
-                            <button type="submit" name="sorted" value="1" class="btn btn-success">Aktualnie na turnusie</button>
-                        </form>
-                    </div>
-                    <div class="col d-flex justify-content-end">
-                        <form action="/patient_list/" method="GET">
-                            <label class="col-form-label" for="search">Podaj nazwisko: </label>
-                            <input  type="text" name="search" id="search" class="my-search-input" placeholder="min. 3 znaki">
-                            <button type="submit" class="btn btn-outline-success">Szukaj</button>
-                        </form>
-                    </div>
+            <div class="row">
+                <div class="col">
+                    <a href="/patient_list/?sorted=0" class="btn btn-success">Wszyscy</a>
+                    <a href="/patient_list/?sorted=1" class="btn btn-success">Obecni</a>
                 </div>
-{#            </form>#}
+                <div class="col d-flex justify-content-end">
+                    <form action="/patient_list/" method="GET">
+                        <label class="col-form-label" for="search">Podaj nazwisko: </label>
+                        <input  type="text" name="search" id="search" class="my-search-input">
+                        <button type="submit" class="btn btn-outline-success">Szukaj</button>
+                    </form>
+                </div>
+            </div>
         {% else %}
             <div class="row">
                 <div class="col">
@@ -34,20 +37,46 @@
         <table class="table">
             <thead>
                 <tr class="d-flex">
-                    <th scope="col" class="col-3">IMIĘ I NAZWISKO</th>
+                    {% if message == 2 %}
+                        <th scope="col" class="col-1">POKÓJ</th>
+                    {% else %}
+                        <th scope="col" class="col-1">LP</th>
+                    {% endif %}
+                    <th scope="col" class="col-2">IMIĘ I NAZWISKO</th>
                     <th scope="col" class="col-2">NICK</th>
                     <th scope="col" class="col-2">EMAIL</th>
-                    <th scope="col" class="col-2">NR  TELEFONU</th>
+                    <th scope="col" class="col-2">NR TELEFONU</th>
                     <th scope="col" class="col-3 text-center">AKCJE</th>
                 </tr>
             </thead>
             <tbody>
                 {% for my_user in my_user_list %}
                     <tr class="d-flex">
-                        <th scope="row" class="col-3">{{ my_user }}</th>
-                        <td class="col-2">
-                            <a href="/patient_timetable/{{ my_user.id }}/">{{ my_user.username }}</a>
-                        </td>
+                        {% if message == 1 %}
+                            <td scope="row" class="col-1">{{ my_user.counter }}</td>
+                            <th scope="row" class="col-2">{{ my_user }}</th>
+                            <td class="col-2">
+                                <a href="/reservation/{{ my_user.id }}/">{{ my_user.username }}</a>
+                            </td>
+                        {% elif message == 2 %}
+                            <td scope="row" class="col-1">{{ my_user.room }}</td>
+                            <th scope="row" class="col-2">{{ my_user }}</th>
+                            <td class="col-2">
+                                <a href="/timetable/{{ my_user.id }}/?week_look=0">{{ my_user.username }}</a>
+                            </td>
+                        {% elif message %}
+                            <td scope="row" class="col-1">{{ my_user.counter }}</td>
+                            <th scope="row" class="col-2">{{ my_user }}</th>
+                            <td class="col-2">
+                                <a href="/reservation/{{ my_user.id }}/">{{ my_user.username }}</a>
+                            </td>
+                        {% else %}
+                            <td scope="row" class="col-1">{{ my_user.counter }}</td>
+                            <th scope="row" class="col-2">{{ my_user }}</th>
+                            <td class="col-2">
+                                <a href="/timetable/{{ my_user.id }}/?week_look=0">{{ my_user.username }}</a>
+                            </td>
+                        {% endif %}
                         <td class="col-2">{{ my_user.email }}</td>
                         <td class="col-2">{{ my_user.tel_number }}</td>
                         <td class="col-3 d-flex align-items-center justify-content-center flex-wrap">
@@ -61,5 +90,42 @@
                 {% endfor %}
             </tbody>
         </table>
+        <div>
+            <ul class="pagination justify-content-center">
+                {% if my_user_list.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ my_user_list.previous_page_number }}">Poprzednia strona</a>
+                    </li>
+                {% endif %}
+                {% if my_user_list.number|add:'-4' > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ my_user_list.number|add:'-5' }}">&hellip;</a>
+                    </li>
+                {% endif %}
+                {% if my_user_list.paginator.num_pages <= 1 %}
+                    {{ pass }}
+                {% else %}
+                {% for i in my_user_list.paginator.page_range %}
+                    {% if my_user_list.number == i %}
+                        <li class="page-item active" aria-current="page">
+                            <span class="page-link">{{ i }}</span>
+                        </li>
+                    {% elif i > my_user_list.number|add:'-5' and i < my_user_list.number|add:'5' %}
+                        <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% endif %}
+                {% if my_user_list.paginator.num_pages > my_user_list.number|add:'4' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ my_user_list.number|add:'5' }}">&hellip;</a>
+                    </li>
+                {% endif %}
+                {% if my_user_list.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ my_user_list.next_page_number }}">Następna strona</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
     </div>
 {% endblock %}

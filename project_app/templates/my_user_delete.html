@@ -4,9 +4,35 @@
     <div class="container my-container">
         <div class="row">
             <div class="col">
-                <h3>Usuń: {{ myuser.first_name }} {{ myuser.last_name }}, status: {{ myuser.get_status_display }}</h3>
+                <h3>Potwierdź usunięcie {{ myuser.username }}</h3>
             </div>
         </div>
+        <table class="table">
+            <thead>
+                <tr class="d-flex">
+                    <th scope="col" class="col-3">Status:</th>
+                    <td class="col">{{ myuser.get_status_display }}</td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="d-flex">
+                    <th scope="col" class="col-3">Imię:</th>
+                    <td class="col">{{ myuser.first_name }}</td>
+                </tr>
+                <tr class="d-flex">
+                    <th scope="col" class="col-3">Nazwisko:</th>
+                    <td class="col">{{ myuser.last_name }}</td>
+                </tr>
+                <tr class="d-flex">
+                    <th scope="col" class="col-3">Email:</th>
+                    <td class="col">{{ myuser.email }}</td>
+                </tr>
+                <tr class="d-flex">
+                    <th scope="col" class="col-3">Numer telefonu:</th>
+                    <td class="col">{{ myuser.tel_number }}</td>
+                </tr>
+            </tbody>
+        </table>
         <form class="form-control" action="" method="POST">
             {%  csrf_token %}
             {{ form.as_p }}

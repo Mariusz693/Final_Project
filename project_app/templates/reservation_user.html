@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %} Reservations User {% endblock %}
+{% block content %}
+    <div class="container my-container">
+        <div class="row">
+            <h3>Rezerwacje: {{ my_user }} </h3>
+        </div>
+        {% for reservation in reservations %}
+            <table class="table">
+                <thead>
+                    <tr class="d-flex">
+                        <th scope="col" class="col-3">Numer:</th>
+                        <td class="col">{{ reservation.counter }}</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="d-flex">
+                        <th scope="col" class="col-3">Data rozpoczęcia</th>
+                        <td class="col">{{ reservation.start_reservation|date:"j E Y" }}</td>
+                    </tr>
+                    <tr class="d-flex">
+                        <th scope="col" class="col-3">Data zakończenia</th>
+                        <td class="col">{{ reservation.end_reservation|date:"j E Y" }}</td>
+                    </tr>
+                    <tr class="d-flex">
+                        <th scope="col" class="col-3">Nr pokoju:</th>
+                        <td class="col">{{ reservation.room.room_number }}</td>
+                    </tr>
+                    <tr class="d-flex">
+                        <th scope="col" class="col-3">Wiadomość:</th>
+                        <td class="col">{{ reservation.message }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        {% empty %}
+        <span>Brak zarezerwowanych terminów</span>
+        {% endfor %}
+    </div>
+{% endblock %}

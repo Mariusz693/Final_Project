@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %} Timetable {% endblock %}
+{% block content %}
+    <div class="container my-container">
+        <div class="row">
+            <h3>Grafik</h3>
+        </div>
+        <div class="row">
+            <h5 class="my-h5"><b>{{ all_week.0|date:"l j E Y" }}</b></h5>
+        </div>
+        <div class="row">
+            <div class="col">
+                {% for day in all_week.1 %}
+                    {% if day.1 == day_look %}
+                        <a class="btn btn-success" href="/timetable/?day_look={{ day.1 }}">{{ day.0|date:"l" }}</a>
+                    {% else %}
+                        <a class="btn btn-outline-success" href="/timetable/?day_look={{ day.1 }}">{{ day.0|date:"l" }}</a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="row my-change-div">
+            <div class="col">
+                <span>Wybrany tydzień:</span>
+                <b class="my-change-week">{{ all_week.2.0 }} - {{ all_week.2.1 }}</b>
+                <a class="my-change-week" href="/timetable/?day_look={{ all_week.2.2 }}">&lt; Poprzedni</a>
+                <a class="my-change-week" href="/timetable/?day_look={{ all_week.2.3 }}">Następny &gt;</a>
+            </div>
+        </div>
+        <div class="row" id="timetable">
+            <div class="col-9">
+                <table class="table table-bordered my-table-border">
+                    <thead>
+                    <tr>
+                        <th class="col-3 text-center my-timetable-table">Rehabilitant</th>
+                        <th class="col-3 text-center my-timetable-table">8:00 - 11:00</th>
+                        <th class="col-3 text-center my-timetable-table">11:00 - 14:00</th>
+                        <th class="col-3 text-center my-timetable-table">14:00 - 17:00</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for employee in timetable_day %}
+                        <tr>
+                            <td class="col-3 text-center my-timetable-table">{{ employee.0 }}</td>
+                            {% for timetable in employee.1 %}
+                                {% if timetable %}
+                                <td class="my-timetable-table" data-employee_id="{{ employee.0.id }}"
+                                    data-hour="{{ forloop.counter }}" data-date="{{ day_look }}">
+                                        <div class="my-patient" id="{{ timetable.patient.id }}" data-reservation_id="{{ timetable.reservation.id }}"
+                                             data-timetable_id="{{ timetable.id }}">{{ timetable.patient }}
+                                        </div>
+                                </td>
+                                {% else %}
+                                <td class="my-timetable-table my-dragdrop" data-employee_id="{{ employee.0.id }}"
+                                    data-hour="{{ forloop.counter }}" data-date="{{ day_look }}">
+                                </td>
+                                {% endif %}
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-3 my-dragdrop">
+                {% for patient in patient_free_list %}
+                    <div class="my-patient" id="{{ patient.id }}" data-timetable_id="" data-reservation_id="{{ patient.reservation_id }}">{{ patient }}</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+<script src="../../static/js/timetable.js"></script>
+{% endblock %}

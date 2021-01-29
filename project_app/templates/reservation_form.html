@@ -25,7 +25,6 @@
                 <label for="start_reservation">Data rozpoczęcia:</label>
                 <input type="date" name="start_reservation" id="start_reservation" required max="{{ end }}"
                        min="{{ start }}" {% if reservation %} value="{{ reservation.start_reservation_change }}" {% endif %}>
-{#                       min="{{ start }}" {% if reservation %} value="{{ reservation.start_reservation|date:"Y-M-d" }}" {% endif %}>#}
             </p>
             <p>
                 <label for="end_reservation">Data zakończenia:</label>
@@ -54,7 +53,6 @@
                 <div class="col">
                     {% if reservation %}
                         <input type="submit" name="button" class="btn btn-success" value="Zapisz">
-                        <input type="submit" name="button" class="btn btn-danger" value="Usuń">
                     {% else %}
                         <input type="submit" class="btn btn-success" value="Dodaj">
                     {% endif %}

@@ -1,12 +1,18 @@
-from django.http import HttpResponseRedirect
+import datetime
+import json
+
+from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect
 from django.views.generic.edit import FormView, DeleteView, View
 from django.contrib.auth import login, logout
 from django.contrib.auth.mixins import PermissionRequiredMixin
-import datetime
-from .models import MyUser, Room, Reservation
+from django.core.paginator import Paginator
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+
+from .models import MyUser, Room, Reservation, Timetable, HOUR_CHOICES
 from .forms import MyUserLoginForm, MyUserCreateForm, MyUserUpdateForm, MyUserPasswordForm
-from .function import generate_list, generate_month, change_date, change_date2
+from .function import generate_list, generate_month, generate_week_timetable, change_day_to_data, set_day_look, generate_week_user
 
 
 class IndexView(View):
@@ -15,7 +21,7 @@ class IndexView(View):
 
         return render(
             request,
-            'index.html',
+            'index.html'
         )
 
 
@@ -66,21 +72,32 @@ class PatientListView(PermissionRequiredMixin, View):
     def get(self, request):
         if request.user.status != 1:
             return redirect('index')
-        my_user_list = MyUser.objects.filter(status=3)
+        message = 1
         option_sorted = request.GET.get('sorted')
         option_search = request.GET.get('search')
         if option_sorted == '1':
             today_is = datetime.date.today()
-            reservation = Reservation.objects.filter(
+            reservations = Reservation.objects.filter(
                 start_reservation__lte=today_is,
                 end_reservation__gte=today_is
-            )
-            my_user_list = [item.patient for item in reservation]
-        if option_search:
-            if len(option_search) > 2:
-                my_user_list = MyUser.objects.filter(status=3, last_name__icontains=option_search)
-
-        message = True
+            ).order_by('room')
+            my_user_list = []
+            for reservation in reservations:
+                reservation.patient.room = reservation.room.room_number
+                my_user_list.append(reservation.patient)
+            message = 2
+        elif option_search:
+            my_user_list = MyUser.objects.filter(status=3, last_name__icontains=option_search).order_by('last_name')
+            for i, patient in enumerate(my_user_list):
+                patient.counter = i + 1
+                message = option_search
+        else:
+            my_user_list = MyUser.objects.filter(status=3).order_by('last_name')
+            for i, patient in enumerate(my_user_list):
+                patient.counter = i + 1
+            paginator = Paginator(my_user_list, 12)
+            page = request.GET.get('page')
+            my_user_list = paginator.get_page(page)
 
         return render(
             request,
@@ -101,7 +118,9 @@ class EmployeeListView(PermissionRequiredMixin, View):
         if request.user.status != 1:
             return redirect('index')
 
-        my_user_list = MyUser.objects.filter(status=2)
+        my_user_list = MyUser.objects.filter(status=2).order_by('last_name')
+        for i, employee in enumerate(my_user_list):
+            employee.counter = i + 1
 
         return render(
             request,
@@ -199,8 +218,6 @@ class MyUserUpdateView(PermissionRequiredMixin, View):
         my_user = MyUser.objects.get(id=id_my_user)
         form = MyUserUpdateForm(initial={
             'nick': my_user.username,
-            'first_name': my_user.first_name,
-            'last_name': my_user.last_name,
             'email': my_user.email,
             'tel_number': my_user.tel_number,
         })
@@ -219,8 +236,6 @@ class MyUserUpdateView(PermissionRequiredMixin, View):
 
         if form.is_valid():
             my_user.username = form.cleaned_data['nick']
-            my_user.first_name = form.cleaned_data['first_name']
-            my_user.last_name = form.cleaned_data['last_name']
             my_user.email = form.cleaned_data['email']
             my_user.tel_number = form.cleaned_data['tel_number']
 
@@ -317,47 +332,38 @@ class ReservationView(PermissionRequiredMixin, View):
         return 'login'
 
     def get(self, request):
-        my_list = generate_list()
+
+        month_list = generate_list()
         month_look = request.GET.get('month_look')
-        button = request.GET.get('button')
-        if month_look:
-            month_look = int(month_look)
-        else:
-            month_look = my_list[0][0]
-        button_active = [True, True]
-        if button == 'prev_month':
-            month_look -= 1
-        if button == 'next_month':
-            month_look += 1
-
-        if month_look == 1:
-            button_active[0] = False
-        if month_look == 24:
-            button_active[1] = False
-
-        my_month = my_list[month_look-1]
-        max_date = my_list[-1][5]
-        min_date = my_list[0][5]
-        print(max_date, min_date)
-        month_list = generate_month(my_month, my_list)
-        week_list = month_list[0]
-        day_list = month_list[1]
-        day_name = month_list[2]
-        day_month_start = day_list[0]
-        day_month_end = day_list[-1]
+        if month_look == '0':
+            today = datetime.date.today()
+            month_look = str(datetime.date(year=today.year, month=today.month, day=1))
+        month_look_data = change_day_to_data(month_look)
+        index_month = month_list.index([month_look_data, month_look])
+        change_month = [
+            month_list[index_month-1][1] if index_month > 0 else None,
+            month_list[index_month+1][1] if index_month < len(month_list) - 1 else None,
+        ]
+        month_look_list = generate_month(month_look_data)
+        month_len = len(month_look_list[0]) * 7
+        day_list = month_look_list[1]
+        month_day_start = day_list[0]
+        month_day_end = day_list[-1]
+        max_date = month_list[-1][0]
+        min_date = month_list[0][0]
         rooms = Room.objects.all()
         for room in rooms:
             reservation_all = room.reservation_set.filter(
-                start_reservation__lte=day_month_end,
-                end_reservation__gte=day_month_start
+                start_reservation__lte=month_day_end,
+                end_reservation__gte=month_day_start
             ).order_by('start_reservation')
             result_table = []
             counter = 0
             for reservation in reservation_all:
                 start_reservation = reservation.start_reservation
                 end_reservation = reservation.end_reservation
-                if (start_reservation - day_month_start).days <= 0:
-                    start_reservation = day_month_start
+                if (start_reservation - month_day_start).days <= 0:
+                    start_reservation = month_day_start
                 else:
                     free_time = day_list.index(start_reservation) - counter
                     prev_reservation = room.reservation_set.filter(
@@ -367,19 +373,19 @@ class ReservationView(PermissionRequiredMixin, View):
                     result_table.append([
                         False,
                         free_time,
-                        prev_reservation.end_reservation + datetime.timedelta(days=1) if prev_reservation else min_date,
-                        next_reservation.start_reservation - datetime.timedelta(days=1) if next_reservation else max_date,
+                        str(prev_reservation.end_reservation + datetime.timedelta(days=1) if prev_reservation else min_date),
+                        str(next_reservation.start_reservation - datetime.timedelta(days=1) if next_reservation else max_date)
                     ])
                     counter += free_time
-                if (end_reservation - day_month_end).days > 0:
-                    end_reservation = day_month_end
+                if (end_reservation - month_day_end).days > 0:
+                    end_reservation = month_day_end
                 during_reservation = (end_reservation - start_reservation).days + 1
                 result_table.append([True, during_reservation, reservation])
                 counter += during_reservation
             counter = 0
             for item in result_table:
                 counter += item[1]
-            free_time = (len(week_list) * 7) - counter
+            free_time = month_len - counter
             if free_time:
                 prev_reservation = room.reservation_set.filter(
                     end_reservation__lte=day_list[counter]).order_by('-end_reservation').first()
@@ -388,34 +394,35 @@ class ReservationView(PermissionRequiredMixin, View):
                 result_table.append([
                     False,
                     free_time,
-                    prev_reservation.end_reservation + datetime.timedelta(days=1) if prev_reservation else min_date,
-                    next_reservation.start_reservation - datetime.timedelta(days=1) if next_reservation else max_date,
+                    str(prev_reservation.end_reservation + datetime.timedelta(days=1) if prev_reservation else min_date),
+                    str(next_reservation.start_reservation - datetime.timedelta(days=1) if next_reservation else max_date)
                 ])
-
             room.reserve = result_table
 
         return render(
                 request,
-            'reservation.html',
+                'reservation.html',
                 context={
-                    'my_list': my_list,
-                    'my_month': my_month,
-                    'button_active': button_active,
-                    'week_list': week_list,
-                    'day_name': day_name,
+                    'month_list': month_list,
+                    'month_look': month_look_data,
+                    'change_month': change_month,
+                    'month_look_list': month_look_list,
                     'rooms': rooms,
                 }
             )
 
 
-class ReservationAddView(View):
+class ReservationAddView(PermissionRequiredMixin, View):
+
+    permission_required = 'project_app.add_reservation'
+
+    def get_login_url(self):
+        return 'login'
 
     def get(self, request):
         start = request.GET.get('start')
         end = request.GET.get('end')
         room_id = request.GET.get('room')
-        start = change_date(start)
-        end = change_date(end)
         room = Room.objects.get(id=room_id)
         patient_list = MyUser.objects.filter(status=3)
         return render(
@@ -453,10 +460,15 @@ class ReservationAddView(View):
                 message=message
             )
 
-            return redirect('reservation')
+            return redirect('../reservation/?month_look=0')
 
 
-class ReservationEditView(View):
+class ReservationEditView(PermissionRequiredMixin, View):
+
+    permission_required = ('project_app.change_reservation', 'project_app.delete_reservation')
+
+    def get_login_url(self):
+        return 'login'
 
     def get(self, request, id_reservation):
         reservation = Reservation.objects.get(id=id_reservation)
@@ -465,15 +477,15 @@ class ReservationEditView(View):
             end_reservation__lte=reservation.start_reservation).order_by('-end_reservation').first()
         next_reservation = room.reservation_set.filter(
             start_reservation__gte=reservation.end_reservation).order_by('start_reservation').first()
-        my_list = generate_list()
-        max_date = my_list[-1][5]
-        min_date = my_list[0][5]
+        month_list = generate_list()
+        max_date = month_list[-1][0]
+        min_date = datetime.date.today()
         start = prev_reservation.end_reservation + datetime.timedelta(days=1) if prev_reservation else min_date
-        start = change_date2(start)
+        start = str(start)
         end = next_reservation.start_reservation - datetime.timedelta(days=1) if next_reservation else max_date
-        end = change_date2(end)
-        reservation.start_reservation_change = change_date2(reservation.start_reservation)
-        reservation.end_reservation_change = change_date2(reservation.end_reservation)
+        end = str(end)
+        reservation.start_reservation_change = str(reservation.start_reservation)
+        reservation.end_reservation_change = str(reservation.end_reservation)
         patient_list = MyUser.objects.filter(status=3)
 
         return render(
@@ -484,46 +496,217 @@ class ReservationEditView(View):
 
     def post(self, request, id_reservation):
         reservation = Reservation.objects.get(id=id_reservation)
-        button = request.POST.get('button')
-        if button == 'Zapisz':
-            start_reservation = request.POST.get('start_reservation')
-            end_reservation = request.POST.get('end_reservation')
-            patient_id = request.POST.get('patient_id')
-            room_id = request.POST.get('room_id')
-            message = request.POST.get('message')
-            if start_reservation and end_reservation and patient_id and room_id:
-                room = Room.objects.get(id=room_id)
+        start_reservation = request.POST.get('start_reservation')
+        end_reservation = request.POST.get('end_reservation')
+        patient_id = request.POST.get('patient_id')
+        room_id = request.POST.get('room_id')
+        message = request.POST.get('message')
+        if start_reservation and end_reservation and patient_id and room_id:
+            room = Room.objects.get(id=room_id)
+            if start_reservation > end_reservation:
+                start = request.POST.get('start')
+                end = request.POST.get('end')
+                patient_list = MyUser.objects.filter(status=3)
+                reservation.start_reservation_change = str(reservation.start_reservation)
+                reservation.end_reservation_change = str(reservation.end_reservation)
 
-                if start_reservation > end_reservation:
-                    start = request.POST.get('start')
-                    end = request.POST.get('end')
-                    patient_list = MyUser.objects.filter(status=3)
-                    reservation.start_reservation_change = change_date2(reservation.start_reservation)
-                    reservation.end_reservation_change = change_date2(reservation.end_reservation)
+                return render(
+                    request,
+                    'reservation_form.html',
+                    context={
+                        'room': room,
+                        'reservation': reservation,
+                        'start': start,
+                        'end': end,
+                        'patient_list': patient_list,
+                        'message': 'Błąd daty'
+                    }
+                )
 
-                    return render(
-                        self.request,
-                        'reservation_form.html',
-                        context={
-                            'room': room,
-                            'reservation': reservation,
-                            'start': start,
-                            'end': end,
-                            'patient_list': patient_list,
-                            'message': 'Błąd daty'
-                        }
-                    )
+            patient = MyUser.objects.get(id=patient_id)
+            reservation.start_reservation = start_reservation
+            reservation.end_reservation = end_reservation
+            reservation.patient = patient
+            reservation.message = message
+            reservation.save()
+            timetables = reservation.timetable_set.filter(day_timetable__lte=reservation.start_reservation)
+            if timetables:
+                for i in range(len(timetables)):
+                    timetables[i].delete()
+            timetables = reservation.timetable_set.filter(day_timetable__gte=reservation.end_reservation)
+            if timetables:
+                for i in range(len(timetables)):
+                    timetables[i].delete()
 
-                patient = MyUser.objects.get(id=patient_id)
-                reservation.start_reservation = start_reservation
-                reservation.end_reservation = end_reservation
-                reservation.patient = patient
-                reservation.message = message
-                reservation.save()
-
-        elif button == 'Usuń':
-            reservation.delete()
-
-        return redirect('reservation')
+        return redirect('/reservation/?month_look=0')
 
 
+class ReservationDeleteView(PermissionRequiredMixin, DeleteView):
+
+    permission_required = 'project_app.delete_reservation'
+    model = Reservation
+    template_name = 'reservation_delete.html'
+    success_url = '/reservation/?month_look=0'
+
+    def get_login_url(self):
+        return 'login'
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class TimetableView(PermissionRequiredMixin, View):
+
+    permission_required = 'project_app.view_timetable'
+
+    def get_login_url(self):
+        return 'login'
+
+    def get(self, request):
+
+        if request.user.status != 1:
+            return redirect('index')
+
+        day_look = request.GET.get('day_look')
+        if day_look == '0':
+            day_look = set_day_look()
+        day_look_date = change_day_to_data(day_look)
+        all_week = generate_week_timetable(day_look_date)
+        employee_list = MyUser.objects.filter(status=2)
+        reservations = Reservation.objects.filter(
+            start_reservation__lte=day_look_date,
+            end_reservation__gte=day_look_date
+        )
+        patient_list = []
+        for reservation in reservations:
+            patient = reservation.patient
+            patient.reservation_id = reservation.id
+            patient_list.append(patient)
+        timetables = Timetable.objects.filter(day_timetable=day_look_date)
+        patient_free_list = []
+        for patient in patient_list:
+            if patient not in [timetable.patient for timetable in timetables]:
+                patient_free_list.append(patient)
+
+        timetable_day = []
+        for i, employee in enumerate(employee_list):
+            timetable_day.append([employee, []])
+            for j in range(1, 4):
+                timetable_day[i][1].append(timetables.filter(employee=employee, hour_timetable=j).first())
+
+        return render(
+            request,
+            'timetable.html',
+            context={
+                'patient_free_list': patient_free_list,
+                'all_week': all_week,
+                'timetable_day': timetable_day,
+                'day_look': day_look
+            },
+        )
+
+    def post(self, request):
+
+        data = json.loads(request.body.decode())
+        employee_id = int(data['employee_id'])
+        patient_id = int(data['patient_id'])
+        reservation_id = int(data['reservation_id'])
+        hour = int(data['hour'])
+        date = data['date']
+        employee = MyUser.objects.get(id=employee_id)
+        patient = MyUser.objects.get(id=patient_id)
+        reservation = Reservation.objects.get(id=reservation_id)
+        timetable, created = Timetable.objects.update_or_create(
+            patient=patient, day_timetable=date,
+            defaults={
+                'patient': patient,
+                'employee': employee,
+                'day_timetable': date,
+                'hour_timetable': hour,
+                'reservation': reservation
+            }
+        )
+
+        return HttpResponse(timetable.id)
+
+    def delete(self, request):
+
+        data = json.loads(request.body.decode())
+        timetable_id = data['timetable_id']
+        timetable = Timetable.objects.get(id=timetable_id)
+        timetable.delete()
+
+        return HttpResponse('OK')
+
+
+class TimetableUserView(PermissionRequiredMixin, View):
+
+    permission_required = 'project_app.view_timetable'
+
+    def get_login_url(self):
+        return 'login'
+
+    def get(self, request, id_my_user):
+
+        if request.user.status != 1 and request.user.id != id_my_user:
+            return redirect('index')
+
+        my_user = MyUser.objects.get(id=id_my_user)
+
+        week_look = request.GET.get('week_look')
+        if week_look == '0':
+            week_look = set_day_look()
+        week_look_data = change_day_to_data(week_look)
+        all_week = generate_week_user(week_look_data)
+        timetable_week = [[hour[1]] for hour in HOUR_CHOICES]
+        for i in range(3):
+            for j in range(5):
+                item = None
+                if my_user.status == 3:
+                    timetable = Timetable.objects.filter(patient=my_user, day_timetable=all_week[1][j],
+                                                         hour_timetable=i+1).first()
+                    if timetable:
+                        item = timetable.employee
+                elif my_user.status == 2:
+                    timetable = Timetable.objects.filter(employee=my_user, day_timetable=all_week[1][j],
+                                                         hour_timetable=i + 1).first()
+                    if timetable:
+                        item = timetable.patient
+                timetable_week[i].append(item)
+
+        return render(
+            request,
+            'timetable_user.html',
+            context={
+                'my_user': my_user,
+                'all_week': all_week,
+                'timetable_week': timetable_week,
+            }
+        )
+
+
+class ReservationUserView(PermissionRequiredMixin, View):
+
+    permission_required = 'project_app.view_reservation'
+
+    def get_login_url(self):
+        return 'login'
+
+    def get(self, request, id_my_user):
+
+        if request.user.status != 1 and request.user.id != id_my_user:
+            return redirect('index')
+
+        my_user = MyUser.objects.get(id=id_my_user)
+        today = datetime.date.today()
+        reservations = Reservation.objects.filter(patient=my_user, end_reservation__gte=today)\
+            .order_by('start_reservation')
+        for i, reservation in enumerate(reservations):
+            reservation.counter = i + 1
+
+        return render(
+            request,
+            'reservation_user.html',
+            context={
+                'my_user': my_user,
+                'reservations': reservations,
+            }
+        )

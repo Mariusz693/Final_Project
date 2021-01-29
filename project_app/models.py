@@ -21,30 +21,6 @@ class MyUser(AbstractUser):
     def __str__(self):
         return self.first_name + ' ' + self.last_name
 
-    def set_permissions(self):
-        if self.status == 1:
-            self.user_permissions.set(
-                list(Permission.objects.filter(codename__icontains='myuser')) +
-                list(Permission.objects.filter(codename__icontains='room')) +
-                list(Permission.objects.filter(codename__icontains='reservation')) +
-                list(Permission.objects.filter(codename__icontains='timetable'))
-            )
-        if self.status == 2:
-            self.user_permissions.set((
-                    Permission.objects.get(codename__icontains='change_myuser'),
-                    Permission.objects.get(codename__icontains='view_myuser'),
-                    Permission.objects.get(codename__icontains='view_timetable')
-                )
-            )
-        if self.status == 3:
-            self.user_permissions.set((
-                    Permission.objects.get(codename__icontains='change_myuser'),
-                    Permission.objects.get(codename__icontains='view_myuser'),
-                    Permission.objects.get(codename__icontains='view_reservation'),
-                    Permission.objects.get(codename__icontains='view_timetable')
-                )
-            )
-
 
 class Room(models.Model):
     room_number = models.SmallIntegerField(unique=True)

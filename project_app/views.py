@@ -5,17 +5,21 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect
 from django.views.generic.edit import FormView, DeleteView, View
 from django.contrib.auth import login, logout
-from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.paginator import Paginator
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
 
 from .models import MyUser, Room, Reservation, Timetable, HOUR_CHOICES
 from .forms import MyUserLoginForm, MyUserCreateForm, MyUserUpdateForm, MyUserPasswordForm
-from .function import generate_list, generate_month, generate_week_timetable, change_day_to_data, set_day_look, generate_week_user
+from .function import generate_list, generate_month, generate_week_timetable, change_day_to_data, set_day_look, \
+     generate_week_user
 
 
 class IndexView(View):
+    """
+
+    """
 
     def get(self, request):
 
@@ -62,16 +66,13 @@ class MyUserLogoutView(View):
         return redirect('index')
 
 
-class PatientListView(PermissionRequiredMixin, View):
+class PatientListView(LoginRequiredMixin, UserPassesTestMixin, View):
 
-    permission_required = 'project_app.view_myuser'
-
-    def get_login_url(self):
-        return 'login'
+    def test_func(self):
+        return self.request.user.status == 1
 
     def get(self, request):
-        if request.user.status != 1:
-            return redirect('index')
+
         message = 1
         option_sorted = request.GET.get('sorted')
         option_search = request.GET.get('search')
@@ -106,17 +107,12 @@ class PatientListView(PermissionRequiredMixin, View):
         )
 
 
-class EmployeeListView(PermissionRequiredMixin, View):
+class EmployeeListView(LoginRequiredMixin, UserPassesTestMixin, View):
 
-    permission_required = 'project_app.view_myuser'
-
-    def get_login_url(self):
-        return 'login'
+    def test_func(self):
+        return self.request.user.status == 1
 
     def get(self, request):
-
-        if request.user.status != 1:
-            return redirect('index')
 
         my_user_list = MyUser.objects.filter(status=2).order_by('last_name')
         for i, employee in enumerate(my_user_list):
@@ -129,12 +125,10 @@ class EmployeeListView(PermissionRequiredMixin, View):
         )
 
 
-class MyUserCreateView(PermissionRequiredMixin, View):
+class MyUserCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
 
-    permission_required = 'project_app.add_myuser'
-
-    def get_login_url(self):
-        return 'login'
+    def test_func(self):
+        return self.request.user.status == 1
 
     def get(self, request):
 
@@ -166,7 +160,6 @@ class MyUserCreateView(PermissionRequiredMixin, View):
                 password=password,
                 status=status
             )
-            new_patient.set_permissions()
 
             if status == 2:
                 return redirect('employee-list')
@@ -180,14 +173,13 @@ class MyUserCreateView(PermissionRequiredMixin, View):
         )
 
 
-class MyUserDeleteView(PermissionRequiredMixin, DeleteView):
+class MyUserDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
-    permission_required = 'project_app.delete_myuser'
+    def test_func(self):
+        return self.request.user.status == 1
+
     model = MyUser
     template_name = 'my_user_delete.html'
-
-    def get_login_url(self):
-        return 'login'
 
     def delete(self, request, *args, **kwargs):
         my_user = self.get_object()
@@ -197,18 +189,12 @@ class MyUserDeleteView(PermissionRequiredMixin, DeleteView):
         else:
             success_url = '/patient_list/'
 
-        my_user.user_permissions.clear()
         my_user.delete()
 
         return HttpResponseRedirect(success_url)
 
 
-class MyUserUpdateView(PermissionRequiredMixin, View):
-
-    permission_required = 'project_app.change_myuser'
-
-    def get_login_url(self):
-        return 'login'
+class MyUserUpdateView(LoginRequiredMixin, View):
 
     def get(self, request, id_my_user):
 
@@ -229,6 +215,9 @@ class MyUserUpdateView(PermissionRequiredMixin, View):
         )
 
     def post(self, request, id_my_user):
+
+        if request.user.status != 1 and request.user.id != id_my_user:
+            return redirect('index')
 
         my_user = MyUser.objects.get(id=id_my_user)
         status = my_user.status
@@ -256,12 +245,7 @@ class MyUserUpdateView(PermissionRequiredMixin, View):
         )
 
 
-class MyUserDetailsView(PermissionRequiredMixin, View):
-
-    permission_required = 'project_app.view_myuser'
-
-    def get_login_url(self):
-        return 'login'
+class MyUserDetailsView(LoginRequiredMixin, View):
 
     def get(self, request, id_my_user):
 
@@ -277,12 +261,7 @@ class MyUserDetailsView(PermissionRequiredMixin, View):
         )
 
 
-class MyUserPasswordView(PermissionRequiredMixin, View):
-
-    permission_required = 'project_app.change_myuser'
-
-    def get_login_url(self):
-        return 'login'
+class MyUserPasswordView(LoginRequiredMixin, View):
 
     def get(self, request, id_my_user):
 
@@ -299,6 +278,9 @@ class MyUserPasswordView(PermissionRequiredMixin, View):
         )
 
     def post(self, request, id_my_user):
+
+        if request.user.status != 1 and request.user.id != id_my_user:
+            return redirect('index')
 
         my_user = MyUser.objects.get(id=id_my_user)
         status = my_user.status
@@ -324,12 +306,10 @@ class MyUserPasswordView(PermissionRequiredMixin, View):
         )
 
 
-class ReservationView(PermissionRequiredMixin, View):
+class ReservationView(LoginRequiredMixin, UserPassesTestMixin, View):
 
-    permission_required = 'project_app.view_reservation'
-
-    def get_login_url(self):
-        return 'login'
+    def test_func(self):
+        return self.request.user.status == 1
 
     def get(self, request):
 
@@ -412,12 +392,10 @@ class ReservationView(PermissionRequiredMixin, View):
             )
 
 
-class ReservationAddView(PermissionRequiredMixin, View):
+class ReservationAddView(LoginRequiredMixin, UserPassesTestMixin, View):
 
-    permission_required = 'project_app.add_reservation'
-
-    def get_login_url(self):
-        return 'login'
+    def test_func(self):
+        return self.request.user.status == 1
 
     def get(self, request):
         start = request.GET.get('start')
@@ -463,14 +441,13 @@ class ReservationAddView(PermissionRequiredMixin, View):
             return redirect('../reservation/?month_look=0')
 
 
-class ReservationEditView(PermissionRequiredMixin, View):
+class ReservationEditView(LoginRequiredMixin, UserPassesTestMixin, View):
 
-    permission_required = ('project_app.change_reservation', 'project_app.delete_reservation')
-
-    def get_login_url(self):
-        return 'login'
+    def test_func(self):
+        return self.request.user.status == 1
 
     def get(self, request, id_reservation):
+
         reservation = Reservation.objects.get(id=id_reservation)
         room = reservation.room
         prev_reservation = room.reservation_set.filter(
@@ -495,6 +472,7 @@ class ReservationEditView(PermissionRequiredMixin, View):
         )
 
     def post(self, request, id_reservation):
+
         reservation = Reservation.objects.get(id=id_reservation)
         start_reservation = request.POST.get('start_reservation')
         end_reservation = request.POST.get('end_reservation')
@@ -541,24 +519,22 @@ class ReservationEditView(PermissionRequiredMixin, View):
         return redirect('/reservation/?month_look=0')
 
 
-class ReservationDeleteView(PermissionRequiredMixin, DeleteView):
+class ReservationDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+
+    def test_func(self):
+        return self.request.user.status == 1
 
     permission_required = 'project_app.delete_reservation'
     model = Reservation
     template_name = 'reservation_delete.html'
     success_url = '/reservation/?month_look=0'
 
-    def get_login_url(self):
-        return 'login'
-
 
 @method_decorator(csrf_exempt, name='dispatch')
-class TimetableView(PermissionRequiredMixin, View):
+class TimetableView(LoginRequiredMixin, UserPassesTestMixin, View):
 
-    permission_required = 'project_app.view_timetable'
-
-    def get_login_url(self):
-        return 'login'
+    def test_func(self):
+        return self.request.user.status == 1
 
     def get(self, request):
 
@@ -637,12 +613,7 @@ class TimetableView(PermissionRequiredMixin, View):
         return HttpResponse('OK')
 
 
-class TimetableUserView(PermissionRequiredMixin, View):
-
-    permission_required = 'project_app.view_timetable'
-
-    def get_login_url(self):
-        return 'login'
+class TimetableUserView(LoginRequiredMixin, View):
 
     def get(self, request, id_my_user):
 
@@ -683,12 +654,7 @@ class TimetableUserView(PermissionRequiredMixin, View):
         )
 
 
-class ReservationUserView(PermissionRequiredMixin, View):
-
-    permission_required = 'project_app.view_reservation'
-
-    def get_login_url(self):
-        return 'login'
+class ReservationUserView(LoginRequiredMixin, View):
 
     def get(self, request, id_my_user):
 

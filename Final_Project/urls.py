@@ -36,5 +36,4 @@ urlpatterns = [
     path('timetable/', views.TimetableView.as_view(), name='timetable'),
     path('timetable/<int:id_my_user>/', views.TimetableUserView.as_view(), name='timetable-user'),
     path('reservation/<int:id_my_user>/', views.ReservationUserView.as_view(), name='reservation-patient'),
-    # path('timetable/<str:my_day>/edit', views.TimetableEditView.as_view(), name='timetable-edit'),
 ]

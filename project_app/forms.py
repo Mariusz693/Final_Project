@@ -25,8 +25,8 @@ class MyUserCreateForm(forms.Form):
     email = forms.EmailField()
     tel_number = forms.CharField(label='Telefon (+48)', validators=[validate_tel_number])
     status = forms.ChoiceField(choices=((3, 'Pacjent'), (2, 'Rehabilitant')), widget=forms.RadioSelect)
-    password = forms.CharField(label='Hasło', max_length=64, widget=forms.PasswordInput())
-    repeat_password = forms.CharField(label='Powtórz hasło', max_length=64, widget=forms.PasswordInput())
+    password = forms.CharField(label='Hasło', max_length=64)
+    repeat_password = forms.CharField(label='Powtórz hasło', max_length=64)
 
     def clean(self):
         super(MyUserCreateForm, self).clean()
@@ -45,8 +45,8 @@ class MyUserUpdateForm(forms.Form):
 
 class MyUserPasswordForm(forms.Form):
 
-    password = forms.CharField(label='Hasło', max_length=64, widget=forms.PasswordInput())
-    repeat_password = forms.CharField(label='Powtórz hasło', max_length=64, widget=forms.PasswordInput())
+    password = forms.CharField(label='Hasło', max_length=64)
+    repeat_password = forms.CharField(label='Powtórz hasło', max_length=64)
 
     def clean(self):
         super(MyUserPasswordForm, self).clean()

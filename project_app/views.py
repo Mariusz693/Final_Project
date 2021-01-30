@@ -18,7 +18,7 @@ from .function import generate_list, generate_month, generate_week_timetable, ch
 
 class IndexView(View):
     """
-
+    Return base page
     """
 
     def get(self, request):
@@ -30,7 +30,9 @@ class IndexView(View):
 
 
 class MyUserLoginView(FormView):
-
+    """
+    Return form to login by admin, patient or employee
+    """
     form_class = MyUserLoginForm
     template_name = 'my_user_login.html'
 
@@ -58,6 +60,9 @@ class MyUserLoginView(FormView):
 
 
 class MyUserLogoutView(View):
+    """
+    Return logout view
+    """
 
     def get(self, request):
         if self.request.user.is_authenticated:
@@ -67,7 +72,10 @@ class MyUserLogoutView(View):
 
 
 class PatientListView(LoginRequiredMixin, UserPassesTestMixin, View):
-
+    """
+    Return a list of all patient sorted by last name, patient currently in the middle, or last name search results
+    Only for user with status admin
+    """
     def test_func(self):
         return self.request.user.status == 1
 
@@ -108,7 +116,10 @@ class PatientListView(LoginRequiredMixin, UserPassesTestMixin, View):
 
 
 class EmployeeListView(LoginRequiredMixin, UserPassesTestMixin, View):
-
+    """
+    Return a list of all employee sorted by last name
+    Only for user with status admin
+    """
     def test_func(self):
         return self.request.user.status == 1
 
@@ -126,7 +137,10 @@ class EmployeeListView(LoginRequiredMixin, UserPassesTestMixin, View):
 
 
 class MyUserCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
-
+    """
+    Return the add person form view, with the choice of patient or employee
+    Only for user with status admin
+    """
     def test_func(self):
         return self.request.user.status == 1
 
@@ -174,7 +188,10 @@ class MyUserCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
 
 
 class MyUserDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-
+    """
+    Return the delete person form view, patient or employee
+    Only for user with status admin
+    """
     def test_func(self):
         return self.request.user.status == 1
 
@@ -195,7 +212,10 @@ class MyUserDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
 
 class MyUserUpdateView(LoginRequiredMixin, View):
-
+    """
+    Return the edit person form view of patient or employee
+    All user
+    """
     def get(self, request, id_my_user):
 
         if request.user.status != 1 and request.user.id != id_my_user:
@@ -246,7 +266,10 @@ class MyUserUpdateView(LoginRequiredMixin, View):
 
 
 class MyUserDetailsView(LoginRequiredMixin, View):
-
+    """
+    Return the view of details patient or employee
+    All user
+    """
     def get(self, request, id_my_user):
 
         if request.user.status != 1 and request.user.id != id_my_user:
@@ -262,7 +285,10 @@ class MyUserDetailsView(LoginRequiredMixin, View):
 
 
 class MyUserPasswordView(LoginRequiredMixin, View):
-
+    """
+    Return the set password form view of patient or employee
+    All user
+    """
     def get(self, request, id_my_user):
 
         if request.user.status != 1 and request.user.id != id_my_user:
@@ -307,7 +333,10 @@ class MyUserPasswordView(LoginRequiredMixin, View):
 
 
 class ReservationView(LoginRequiredMixin, UserPassesTestMixin, View):
-
+    """
+    Return the reservation patient view
+    Only for user with status admin
+    """
     def test_func(self):
         return self.request.user.status == 1
 
@@ -388,12 +417,16 @@ class ReservationView(LoginRequiredMixin, UserPassesTestMixin, View):
                     'change_month': change_month,
                     'month_look_list': month_look_list,
                     'rooms': rooms,
+                    'month': [str(day_list[0]), str(day_list[-1])]
                 }
             )
 
 
 class ReservationAddView(LoginRequiredMixin, UserPassesTestMixin, View):
-
+    """
+    Return the add reservation view
+    Only for user with status admin
+    """
     def test_func(self):
         return self.request.user.status == 1
 
@@ -401,12 +434,21 @@ class ReservationAddView(LoginRequiredMixin, UserPassesTestMixin, View):
         start = request.GET.get('start')
         end = request.GET.get('end')
         room_id = request.GET.get('room')
+        month_start = request.GET.get('month_start')
+        month_end = request.GET.get('month_end')
         room = Room.objects.get(id=room_id)
         patient_list = MyUser.objects.filter(status=3)
         return render(
             request,
             'reservation_form.html',
-            context={'room': room, 'start': start, 'end': end, 'patient_list': patient_list}
+            context={
+                'room': room,
+                'start': start,
+                'end': end,
+                'patient_list': patient_list,
+                'month_start': month_start,
+                'month_end': month_end,
+            }
         )
 
     def post(self, request):
@@ -442,7 +484,10 @@ class ReservationAddView(LoginRequiredMixin, UserPassesTestMixin, View):
 
 
 class ReservationEditView(LoginRequiredMixin, UserPassesTestMixin, View):
-
+    """
+    Return the edit reservation view
+    Only for user with status admin
+    """
     def test_func(self):
         return self.request.user.status == 1
 
@@ -520,7 +565,10 @@ class ReservationEditView(LoginRequiredMixin, UserPassesTestMixin, View):
 
 
 class ReservationDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-
+    """
+    Return the delete reservation view
+    Only for user with status admin
+    """
     def test_func(self):
         return self.request.user.status == 1
 
@@ -532,14 +580,14 @@ class ReservationDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class TimetableView(LoginRequiredMixin, UserPassesTestMixin, View):
-
+    """
+    Return the view where user may add or delete timetable for patient currently in the middle
+    Only for user with status admin
+    """
     def test_func(self):
         return self.request.user.status == 1
 
     def get(self, request):
-
-        if request.user.status != 1:
-            return redirect('index')
 
         day_look = request.GET.get('day_look')
         if day_look == '0':
@@ -614,7 +662,10 @@ class TimetableView(LoginRequiredMixin, UserPassesTestMixin, View):
 
 
 class TimetableUserView(LoginRequiredMixin, View):
-
+    """
+    Return view of the timetable for current user (patient or employee)
+    All user
+    """
     def get(self, request, id_my_user):
 
         if request.user.status != 1 and request.user.id != id_my_user:
@@ -655,7 +706,10 @@ class TimetableUserView(LoginRequiredMixin, View):
 
 
 class ReservationUserView(LoginRequiredMixin, View):
-
+    """
+    Return view of the reservation for current patient
+    All user
+    """
     def get(self, request, id_my_user):
 
         if request.user.status != 1 and request.user.id != id_my_user:

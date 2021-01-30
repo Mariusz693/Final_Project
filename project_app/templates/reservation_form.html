@@ -24,12 +24,22 @@
             <p>
                 <label for="start_reservation">Data rozpoczęcia:</label>
                 <input type="date" name="start_reservation" id="start_reservation" required max="{{ end }}"
-                       min="{{ start }}" {% if reservation %} value="{{ reservation.start_reservation_change }}" {% endif %}>
+                       min="{{ start }}"
+                        {% if reservation %}
+                            value="{{ reservation.start_reservation_change }}"
+                        {% else %}
+                            value="{{ month_start }}"
+                        {% endif %}>
             </p>
             <p>
                 <label for="end_reservation">Data zakończenia:</label>
                 <input type="date" name="end_reservation" id="end_reservation" required max="{{ end }}"
-                       min="{{ start }}" {% if reservation %} value="{{ reservation.end_reservation_change }}" {% endif %}>
+                       min="{{ start }}"
+                        {% if reservation %}
+                            value="{{ reservation.end_reservation_change }}"
+                        {% else %}
+                            value="{{ month_end }}"
+                        {% endif %}>
             </p>
             <p>
                 <label for="patient_id">Pacjent:</label>

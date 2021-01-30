@@ -3,13 +3,16 @@
 {% block content %}
     <div class="container my-container">
         <div class="row">
-            <h3>Rezerwacje: {{ my_user }} </h3>
+            <h3><b>{{ my_user }} - Rezerwacje</b></h3>
+        </div>
+        <div class="row">
+            <h3>Aktualne:</h3>
         </div>
         {% for reservation in reservations %}
             <table class="table">
                 <thead>
                     <tr class="d-flex">
-                        <th scope="col" class="col-3">Numer:</th>
+                        <th scope="col" class="col-3">Lp:</th>
                         <td class="col">{{ reservation.counter }}</td>
                     </tr>
                 </thead>
@@ -33,7 +36,47 @@
                 </tbody>
             </table>
         {% empty %}
-        <span>Brak zarezerwowanych terminów</span>
+            <table class="table">
+                <thead>
+                    <tr class="d-flex">
+                        <th scope="col" class="col-12">Brak zarezerwowanych terminów</th>
+                    </tr>
+                </thead>
+            <tbody></tbody>
+            </table>
         {% endfor %}
+        {% if reservations_prev %}
+            <div class="row">
+                <h3>Zakończone:</h3>
+            </div>
+            {% for reservation in reservations_prev %}
+                <table class="table">
+                    <thead>
+                        <tr class="d-flex">
+                            <th scope="col" class="col-3">Lp:</th>
+                            <td class="col">{{ reservation.counter }}</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="d-flex">
+                            <th scope="col" class="col-3">Data rozpoczęcia</th>
+                            <td class="col">{{ reservation.start_reservation|date:"j E Y" }}</td>
+                        </tr>
+                        <tr class="d-flex">
+                            <th scope="col" class="col-3">Data zakończenia</th>
+                            <td class="col">{{ reservation.end_reservation|date:"j E Y" }}</td>
+                        </tr>
+                        <tr class="d-flex">
+                            <th scope="col" class="col-3">Nr pokoju:</th>
+                            <td class="col">{{ reservation.room.room_number }}</td>
+                        </tr>
+                        <tr class="d-flex">
+                            <th scope="col" class="col-3">Wiadomość:</th>
+                            <td class="col">{{ reservation.message }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            {% endfor %}
+        {% endif %}
     </div>
 {% endblock %}

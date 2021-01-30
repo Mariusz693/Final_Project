@@ -722,11 +722,17 @@ class ReservationUserView(LoginRequiredMixin, View):
         for i, reservation in enumerate(reservations):
             reservation.counter = i + 1
 
+        reservations_prev = Reservation.objects.filter(patient=my_user, end_reservation__lte=today)\
+            .order_by('start_reservation')
+        for i, reservation in enumerate(reservations_prev):
+            reservation.counter = i + 1
+
         return render(
             request,
             'reservation_user.html',
             context={
                 'my_user': my_user,
                 'reservations': reservations,
+                'reservations_prev': reservations_prev,
             }
         )

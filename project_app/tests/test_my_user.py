@@ -20,6 +20,7 @@ def test_patient_add(client, user_admin):
     response = client.post('/my_user_add/', post_data)
     assert MyUser.objects.filter(status=3).count() == 1
     assert response.status_code == 302
+    client.logout()
 
 
 @pytest.mark.django_db
@@ -40,10 +41,11 @@ def test_employee_add(client, user_admin):
     response = client.post('/my_user_add/', post_data)
     assert MyUser.objects.filter(status=2).count() == 1
     assert response.status_code == 302
+    client.logout()
 
 
 @pytest.mark.django_db
-def test_patient_delete(client, user_admin, user_patient, user_employee, patient_list):
+def test_patient_delete_admin(client, user_admin, patient_list):
 
     assert MyUser.objects.filter(status=3).count() == 10
     client.force_login(user=user_admin, backend=None)
@@ -52,16 +54,24 @@ def test_patient_delete(client, user_admin, user_patient, user_employee, patient
     assert response.status_code == 302
     client.logout()
 
+
+@pytest.mark.django_db
+def test_patient_delete_patient(client, user_patient, patient_list):
+
+    assert MyUser.objects.filter(status=3).count() == 10
     client.force_login(user=user_patient, backend=None)
     response = client.get(f'/my_user_delete/{patient_list[8].id}/')
-    assert MyUser.objects.filter(status=3).count() == 9
-    # assert response.status_code == 403
+    assert MyUser.objects.filter(status=3).count() == 10
     client.logout()
 
+
+@pytest.mark.django_db
+def test_patient_delete_employee(client, user_employee, patient_list):
+
+    assert MyUser.objects.filter(status=3).count() == 10
     client.force_login(user=user_employee, backend=None)
     response = client.get(f'/my_user_delete/{patient_list[8].id}/')
-    assert MyUser.objects.filter(status=3).count() == 9
-    # assert response.status_code == 403
+    assert MyUser.objects.filter(status=3).count() == 10
     client.logout()
 
 
@@ -85,6 +95,7 @@ def test_patient_edit(client, user_admin, patient):
     assert patient_obj.username == post_data['nick']
     assert patient_obj.email == post_data['email']
     assert patient_obj.tel_number == post_data['tel_number']
+    client.logout()
 
 
 @pytest.mark.django_db
@@ -103,6 +114,7 @@ def test_patient_list(client, user_admin, patient_list):
     assert response.context['my_user_list'][7] == patient_list[7]
     assert response.context['my_user_list'][8] == patient_list[8]
     assert response.context['my_user_list'][9] == patient_list[9]
+    client.logout()
 
 
 @pytest.mark.django_db
@@ -118,6 +130,7 @@ def test_patient_detail(client, user_admin, patient):
     assert response_context.tel_number == patient.tel_number
     assert response_context.email == patient.email
     assert response_context.status == patient.status
+    client.logout()
 
 
 @pytest.mark.django_db
@@ -128,20 +141,3 @@ def test_login(client):
     }
     response = client.post('/login/', post_data)
     assert response.status_code == 200
-
-#
-# @pytest.mark.django_db
-# def test_reservation_add(client, user_admin, user_patient, user_employee):
-#
-#     client.force_login(user=user_admin, backend=None)
-#     assert Reservation.objects.all().count() == 0  # Sprawdzam stan bazy
-#     post_data = {
-#         'room': '1',
-#         'start_reservation': '2021-02-01',
-#         'end_reservation': '2021-02-26',
-#         'message': 'message',
-#         'patient': '1',
-#     }
-#     response = client.post('/reservation_add/', post_data)
-#     assert Reservation.objects.all().count() == 1
-#     assert response.status_code == 302

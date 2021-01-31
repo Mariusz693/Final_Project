@@ -19,14 +19,14 @@ def user_admin():
 
 @pytest.fixture
 def user_patient():
-    user_patient = MyUser.objects.create_user(username='Patient', email=None, password='Patient', status=1)
+    user_patient = MyUser.objects.create_user(username='Patient', email=None, password='Patient', status=3)
 
     return user_patient
 
 
 @pytest.fixture
 def user_employee():
-    user_employee = MyUser.objects.create_user(username='Employee', email=None, password='Employee', status=1)
+    user_employee = MyUser.objects.create_user(username='Employee', email=None, password='Employee', status=2)
 
     return user_employee
 

@@ -81,7 +81,7 @@ h3 {
     border-radius: 5px;
     text-align: center;
     padding: 5px;
-    cursor: pointer;
+    cursor: alias;
 }
 
 .my-patient_2 {
@@ -93,4 +93,12 @@ h3 {
     border-radius: 5px;
     text-align: center;
     padding: 5px;
+}
+
+.my-cursor {
+    cursor: pointer;
+}
+
+.my-form-row {
+    margin: 10px;
 }

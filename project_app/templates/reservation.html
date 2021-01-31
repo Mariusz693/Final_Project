@@ -58,7 +58,7 @@
                     {% for item in room.reserve %}
                         {% if item.0 %}
                             <td colspan="{{ item.1 }}" style="background-color: #6ebe96;">
-                                <a class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
+                                <a class="nav-link dropdown-toggle my-cursor" data-toggle="dropdown" aria-haspopup="true"
                                        aria-expanded="false">{{ item.2.patient }}</a>
                                 <div class="dropdown-menu">
                                     <span class="dropdown-item"><b>{{ item.2.patient }}</b></span>
@@ -72,7 +72,7 @@
                         {% else %}
                             <td colspan="{{ item.1 }}">
                                 {% if item.1 > 2 %}
-                                <a class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
+                                <a class="nav-link dropdown-toggle my-cursor" data-toggle="dropdown" aria-haspopup="true"
                                        aria-expanded="false"></a>
                                 <div class="dropdown-menu">
                                     <span class="dropdown-item"><b>Wolny termin</b></span>

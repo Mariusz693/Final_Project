@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 from .validators import validate_tel_number
+from .models import MyUser, HOUR_CHOICES
 
 
 class MyUserLoginForm(forms.Form):
@@ -54,3 +55,4 @@ class MyUserPasswordForm(forms.Form):
         repeat_password = self.cleaned_data['repeat_password']
         if password != repeat_password:
             raise ValidationError('Hasła różnią się od siebie!')
+

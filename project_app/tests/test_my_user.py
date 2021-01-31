@@ -45,33 +45,25 @@ def test_employee_add(client, user_admin):
 
 
 @pytest.mark.django_db
-def test_patient_delete_admin(client, user_admin, patient_list):
+def test_patient_delete(client, user_admin, patient_list, user_patient, user_employee):
 
-    assert MyUser.objects.filter(status=3).count() == 10
+    assert MyUser.objects.filter(status=3).count() == 11
     client.force_login(user=user_admin, backend=None)
     response = client.post(f'/my_user_delete/{patient_list[9].id}/')
-    assert MyUser.objects.filter(status=3).count() == 9
+    assert MyUser.objects.filter(status=3).count() == 10
     assert response.status_code == 302
     client.logout()
 
-
-@pytest.mark.django_db
-def test_patient_delete_patient(client, user_patient, patient_list):
-
-    assert MyUser.objects.filter(status=3).count() == 10
     client.force_login(user=user_patient, backend=None)
-    response = client.get(f'/my_user_delete/{patient_list[8].id}/')
+    response = client.post(f'/my_user_delete/{patient_list[8].id}/')
     assert MyUser.objects.filter(status=3).count() == 10
+    assert response.status_code == 403
     client.logout()
 
-
-@pytest.mark.django_db
-def test_patient_delete_employee(client, user_employee, patient_list):
-
-    assert MyUser.objects.filter(status=3).count() == 10
     client.force_login(user=user_employee, backend=None)
-    response = client.get(f'/my_user_delete/{patient_list[8].id}/')
+    response = client.post(f'/my_user_delete/{patient_list[8].id}/')
     assert MyUser.objects.filter(status=3).count() == 10
+    assert response.status_code == 403
     client.logout()
 
 

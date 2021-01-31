@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load crispy_forms_tags %}
 {% block title %} MyUser Edit {% endblock %}
 {% block content %}
     <div class="container my-container">
@@ -13,11 +14,25 @@
         </div>
         <form class="form-control" action="" method="POST">
             {% if message %}
-                <h4 class="text-danger">{{ message }}</h4>
+                <div class="row my-form-row">
+                    <h4 class="text-danger">{{ message }}</h4>
+                </div>
             {% endif %}
             {% csrf_token %}
-            {{ form.as_p }}
-            <div class="row">
+            <div class="row my-form-row">
+                <div class="col-6">
+                    {{ form.nick|as_crispy_field }}
+                </div>
+            </div>
+            <div class="row my-form-row">
+                <div class="col-6">
+                    {{ form.email|as_crispy_field }}
+                </div>
+                <div class="col-6">
+                    {{ form.tel_number|as_crispy_field }}
+                </div>
+            </div>
+            <div class="row my-form-row">
                 <div class="col">
                     <input type="submit" class="btn btn-success" value="Potwierdź">
                 </div>

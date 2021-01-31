@@ -99,7 +99,7 @@ class PatientListView(LoginRequiredMixin, UserPassesTestMixin, View):
             my_user_list = MyUser.objects.filter(status=3, last_name__icontains=option_search).order_by('last_name')
             for i, patient in enumerate(my_user_list):
                 patient.counter = i + 1
-                message = option_search
+            message = option_search
         else:
             my_user_list = MyUser.objects.filter(status=3).order_by('last_name')
             for i, patient in enumerate(my_user_list):
@@ -431,6 +431,7 @@ class ReservationAddView(LoginRequiredMixin, UserPassesTestMixin, View):
         return self.request.user.status == 1
 
     def get(self, request):
+
         start = request.GET.get('start')
         end = request.GET.get('end')
         room_id = request.GET.get('room')
@@ -457,8 +458,11 @@ class ReservationAddView(LoginRequiredMixin, UserPassesTestMixin, View):
         patient_id = request.POST.get('patient_id')
         room_id = request.POST.get('room_id')
         message = request.POST.get('message')
+        month_start = request.GET.get('month_start')
+        month_end = request.GET.get('month_end')
         if start_reservation and end_reservation and patient_id and room_id:
             room = Room.objects.get(id=room_id)
+            patient = MyUser.objects.get(id=patient_id)
 
             if start_reservation > end_reservation:
                 start = request.POST.get('start')
@@ -468,10 +472,46 @@ class ReservationAddView(LoginRequiredMixin, UserPassesTestMixin, View):
                 return render(
                     self.request,
                     'reservation_form.html',
-                    context={'room': room, 'start': start, 'end': end, 'patient_list': patient_list, 'message': 'Błąd daty'}
+                    context={
+                        'room': room,
+                        'start': start,
+                        'end': end,
+                        'patient_list': patient_list,
+                        'month_start': month_start,
+                        'month_end': month_end,
+                        'message': 'Błądnie wpisana data'
+                    }
                 )
 
-            patient = MyUser.objects.get(id=patient_id)
+            reservation_end = Reservation.objects.filter(
+                patient=patient, end_reservation__range=(start_reservation, end_reservation)
+            )
+            reservation_start = Reservation.objects.filter(
+                patient=patient, start_reservation__range=(start_reservation, end_reservation)
+            )
+            reservation_during = Reservation.objects.filter(
+                patient=patient, start_reservation__lte=start_reservation, end_reservation__gte=end_reservation
+            )
+
+            if reservation_end or reservation_start or reservation_during:
+                start = request.POST.get('start')
+                end = request.POST.get('end')
+                patient_list = MyUser.objects.filter(status=3)
+
+                return render(
+                    self.request,
+                    'reservation_form.html',
+                    context={
+                        'room': room,
+                        'start': start,
+                        'end': end,
+                        'patient_list': patient_list,
+                        'month_start': month_start,
+                        'month_end': month_end,
+                        'message': 'Pacjent ma już zarezerwowany pobyt w tym terminie'
+                    }
+                )
+
             reservation = Reservation.objects.create(
                 patient=patient,
                 room=room,
@@ -526,6 +566,8 @@ class ReservationEditView(LoginRequiredMixin, UserPassesTestMixin, View):
         message = request.POST.get('message')
         if start_reservation and end_reservation and patient_id and room_id:
             room = Room.objects.get(id=room_id)
+            patient = MyUser.objects.get(id=patient_id)
+
             if start_reservation > end_reservation:
                 start = request.POST.get('start')
                 end = request.POST.get('end')
@@ -542,11 +584,40 @@ class ReservationEditView(LoginRequiredMixin, UserPassesTestMixin, View):
                         'start': start,
                         'end': end,
                         'patient_list': patient_list,
-                        'message': 'Błąd daty'
+                        'message': 'Błądnie wpisana data'
                     }
                 )
 
-            patient = MyUser.objects.get(id=patient_id)
+            reservation_end = Reservation.objects.filter(
+                patient=patient, end_reservation__range=(start_reservation, end_reservation)
+            )
+            reservation_start = Reservation.objects.filter(
+                patient=patient, start_reservation__range=(start_reservation, end_reservation)
+            )
+            reservation_during = Reservation.objects.filter(
+                patient=patient, start_reservation__lte=start_reservation, end_reservation__gte=end_reservation
+            )
+
+            if reservation_end or reservation_start or reservation_during:
+                start = request.POST.get('start')
+                end = request.POST.get('end')
+                patient_list = MyUser.objects.filter(status=3)
+                reservation.start_reservation_change = str(reservation.start_reservation)
+                reservation.end_reservation_change = str(reservation.end_reservation)
+
+                return render(
+                    self.request,
+                    'reservation_form.html',
+                    context={
+                        'room': room,
+                        'reservation': reservation,
+                        'start': start,
+                        'end': end,
+                        'patient_list': patient_list,
+                        'message': 'Pacjent ma już zarezerwowany pobyt w tym terminie'
+                    }
+                )
+
             reservation.start_reservation = start_reservation
             reservation.end_reservation = end_reservation
             reservation.patient = patient

@@ -1,11 +1,7 @@
 
-function validDropArea(e){
-    return (' ' + e.target.className + ' ').indexOf(' my-dragdrop ') > -1;
-}
 function attachDropEvents(a) {
     a.ondragover = function (e) {
-        if (validDropArea(e))
-            e.preventDefault();
+        e.preventDefault();
     };
     a.ondrop = function (e) {
         let url = window.location.href;

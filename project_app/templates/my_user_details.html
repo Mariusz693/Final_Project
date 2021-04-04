@@ -32,8 +32,8 @@
             </tbody>
         </table>
         <div>
-            <a class="btn btn-info" href="/my_user_edit/{{ my_user.id }}">Edytuj dane</a>
-            <a class="btn btn-info" href="/my_user_password/{{ my_user.id }}">Zmień hasło</a>
+            <a class="btn btn-info" href="{% url 'my-user-edit' id_my_user=my_user.id %}">Edytuj dane</a>
+            <a class="btn btn-info" href="{% url 'my-user-password' id_my_user=my_user.id %}">Zmień hasło</a>
         </div>
     </div>
 {% endblock %}

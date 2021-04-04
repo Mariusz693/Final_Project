@@ -1,33 +1,44 @@
 {% extends 'base.html' %}
+{% block title %} MyUser Add {% endblock %}
 {% load crispy_forms_tags %}
-{% block title %} Login {% endblock %}
 {% block content %}
     <div class="container my-container">
         <div class="row">
             <div class="col">
-                <h3>Logowanie</h3>
+                <h3>Dodaj osobę</h3>
             </div>
         </div>
         <form class="form-control" action="" method="POST">
-            {% if message %}
+            <!-- {% if message %}
                 <div class="row my-form-row">
                     <h4 class="text-danger">{{ message }}</h4>
                 </div>
-            {% endif %}
+            {% endif %} -->
             {% csrf_token %}
             <div class="row my-form-row">
                 <div class="col-6">
-                    {{ form.username|as_crispy_field }}
+                    {{ form.first_name|as_crispy_field }}
+                </div>
+                <div class="col-6">
+                    {{ form.last_name|as_crispy_field }}
                 </div>
             </div>
             <div class="row my-form-row">
                 <div class="col-6">
-                    {{ form.password|as_crispy_field }}
+                    {{ form.email|as_crispy_field }}
+                </div>
+                <div class="col-6">
+                    {{ form.tel_number|as_crispy_field }}
+                </div>
+            </div>
+            <div class="row my-form-row">
+                <div class="col-6">
+                    {{ form.status|as_crispy_field }}
                 </div>
             </div>
             <div class="row my-form-row">
                 <div class="col">
-                    <input type="submit" class="btn btn-success" value="Zaloguj">
+                    <input type="submit" class="btn btn-success" value="Dodaj">
                 </div>
                 <div class="col d-flex justify-content-end">
                     <a class="btn btn-danger" onclick="history.back();">Anuluj</a>

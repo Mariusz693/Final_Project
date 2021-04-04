@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %} Timetable {% endblock %}
 {% block content %}
     <div class="container my-container">
@@ -12,9 +13,9 @@
             <div class="col">
                 {% for day in all_week.1 %}
                     {% if day.1 == day_look %}
-                        <a class="btn btn-success" href="/timetable/?day_look={{ day.1 }}">{{ day.0|date:"l" }}</a>
+                        <a class="btn btn-success" href="{% url 'timetable' %}?day_look={{ day.1 }}">{{ day.0|date:"l" }}</a>
                     {% else %}
-                        <a class="btn btn-outline-success" href="/timetable/?day_look={{ day.1 }}">{{ day.0|date:"l" }}</a>
+                        <a class="btn btn-outline-success" href="{% url 'timetable' %}?day_look={{ day.1 }}">{{ day.0|date:"l" }}</a>
                     {% endif %}
                 {% endfor %}
             </div>
@@ -23,8 +24,8 @@
             <div class="col">
                 <span>Wybrany tydzień:</span>
                 <b class="my-change-week">{{ all_week.2.0 }} - {{ all_week.2.1 }}</b>
-                <a class="my-change-week" href="/timetable/?day_look={{ all_week.2.2 }}">&lt; Poprzedni</a>
-                <a class="my-change-week" href="/timetable/?day_look={{ all_week.2.3 }}">Następny &gt;</a>
+                <a class="my-change-week" href="{% url 'timetable' %}?day_look={{ all_week.2.2 }}">&lt; Poprzedni</a>
+                <a class="my-change-week" href="{% url 'timetable' %}?day_look={{ all_week.2.3 }}">Następny &gt;</a>
             </div>
         </div>
         <div class="row" id="timetable">
@@ -68,5 +69,5 @@
             </div>
         </div>
     </div>
-<script src="../../static/js/timetable.js"></script>
+<script src="{% static 'js/timetable.js' %}"></script>
 {% endblock %}

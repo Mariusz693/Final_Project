@@ -28,7 +28,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-LOGIN_URL = '/login/'
+LOGIN_URL = '/login'
 
 # Application definition
 
@@ -74,7 +74,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Final_Project.wsgi.application'
 
-AUTH_USER_MODEL = 'project_app.MyUser'
+AUTH_USER_MODEL = 'project_app.User'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
@@ -116,7 +116,3 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
-
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
-]

@@ -9,8 +9,8 @@
             <div class="col">
                 <span>Wybrany tydzień:</span>
                 <b class="my-change-week">{{ all_week.0.0 }} - {{ all_week.0.1 }}</b>
-                <a class="my-change-week" href="/timetable/{{ my_user.id }}/?week_look={{ all_week.0.2 }}">&lt; Poprzedni</a>
-                <a class="my-change-week" href="/timetable/{{ my_user.id }}/?week_look={{ all_week.0.3 }}">Następny &gt;</a>
+                <a class="my-change-week" href="{% url 'timetable-user' id_my_user=my_user.id%}?week_look={{ all_week.0.2 }}">&lt; Poprzedni</a>
+                <a class="my-change-week" href="{% url 'timetable-user' id_my_user=my_user.id%}?week_look={{ all_week.0.3 }}">Następny &gt;</a>
             </div>
         </div>
         <table class="table table-bordered my-table-border">

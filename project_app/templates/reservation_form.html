@@ -42,7 +42,7 @@
             <div class="row my-form-row">
                 <div class="col-6 form-group">
                     <label for="id_start_reservation">Data rozpoczęcia*</label>
-                    <input type="date" name="start_reservation" class="dateinput form-control" id="id_start_reservation"
+                    <input type="date" name="start_reservation" class="form-control" id="id_start_reservation"
                             required max="{{ end }}" min="{{ start }}"
                                 {% if reservation %}
                                     value="{{ reservation.start_reservation_change }}"
@@ -52,7 +52,7 @@
                 </div>
                 <div class="col-6 form-group">
                     <label for="id_end_reservation">Data zakończenia*</label>
-                    <input type="date" name="end_reservation" class="dateinput form-control" id="id_end_reservation"
+                    <input type="date" name="end_reservation" class="form-control" id="id_end_reservation"
                            required max="{{ end }}" min="{{ start }}"
                                 {% if reservation %}
                                     value="{{ reservation.end_reservation_change }}"

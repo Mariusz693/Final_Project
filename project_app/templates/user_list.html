@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %} MyUser List {% endblock %}
+{% block title %} User List {% endblock %}
 {% block content %}
     <div class="container my-container">
         {% if message %}
@@ -16,11 +16,11 @@
             </div>
             <div class="row">
                 <div class="col">
-                    <a href="/patient_list/?sorted=0" class="btn btn-success">Wszyscy</a>
-                    <a href="/patient_list/?sorted=1" class="btn btn-success">Obecni</a>
+                    <a href="{% url 'patient-list'%}?sorted=0" class="btn btn-success">Wszyscy</a>
+                    <a href="{% url 'patient-list'%}?sorted=1" class="btn btn-success">Obecni</a>
                 </div>
                 <div class="col d-flex justify-content-end">
-                    <form action="/patient_list/" method="GET">
+                    <form action="{% url 'patient-list' %}" method="GET">
                         <label class="col-form-label" for="search">Podaj nazwisko: </label>
                         <input  type="text" name="search" id="search" class="my-search-input">
                         <button type="submit" class="btn btn-outline-success">Szukaj</button>
@@ -50,39 +50,39 @@
                 </tr>
             </thead>
             <tbody>
-                {% for my_user in my_user_list %}
+                {% for user in user_list %}
                     <tr class="d-flex">
                         {% if message == 1 %}
-                            <td scope="row" class="col-1">{{ my_user.counter }}</td>
-                            <th scope="row" class="col-2">{{ my_user }}</th>
+                            <td scope="row" class="col-1">{{ user.counter }}</td>
+                            <th scope="row" class="col-2">{{ user }}</th>
                             <td class="col-2">
-                                <a href="/reservation/{{ my_user.id }}/">{{ my_user.username }}</a>
+                                <a href="{% url 'reservation-patient' id_user=user.id %}">{{ user.username }}</a>
                             </td>
                         {% elif message == 2 %}
-                            <td scope="row" class="col-1">{{ my_user.room }}</td>
-                            <th scope="row" class="col-2">{{ my_user }}</th>
+                            <td scope="row" class="col-1">{{ user.room }}</td>
+                            <th scope="row" class="col-2">{{ user }}</th>
                             <td class="col-2">
-                                <a href="/timetable/{{ my_user.id }}/?week_look=0">{{ my_user.username }}</a>
+                                <a href="{% url 'timetable-user' id_user=user.id %}?week_look=0">{{ user.username }}</a>
                             </td>
                         {% elif message %}
-                            <td scope="row" class="col-1">{{ my_user.counter }}</td>
-                            <th scope="row" class="col-2">{{ my_user }}</th>
+                            <td scope="row" class="col-1">{{ forloop.counter }}</td>
+                            <th scope="row" class="col-2">{{ user }}</th>
                             <td class="col-2">
-                                <a href="/reservation/{{ my_user.id }}/">{{ my_user.username }}</a>
+                                <a href="{% url 'reservation-patient' id_user=user.id %}">{{ user.username }}</a>
                             </td>
                         {% else %}
-                            <td scope="row" class="col-1">{{ my_user.counter }}</td>
-                            <th scope="row" class="col-2">{{ my_user }}</th>
+                            <td scope="row" class="col-1">{{ forloop.counter }}</td>
+                            <th scope="row" class="col-2">{{ user }}</th>
                             <td class="col-2">
-                                <a href="/timetable/{{ my_user.id }}/?week_look=0">{{ my_user.username }}</a>
+                                <a href="{% url 'timetable-user' id_user=user.id %}?week_look=0">{{ user.username }}</a>
                             </td>
                         {% endif %}
-                        <td class="col-2">{{ my_user.email }}</td>
-                        <td class="col-2">{{ my_user.tel_number }}</td>
+                        <td class="col-2">{{ user.email }}</td>
+                        <td class="col-2">{{ user.phone }}</td>
                         <td class="col-3 d-flex align-items-center justify-content-center flex-wrap">
-                            <a class="btn btn-info my-table-button" href="/my_user_edit/{{ my_user.id }}/">Edytuj</a>
-                            <a class="btn btn-info my-table-button" href="/my_user_password/{{ my_user.id }}/">Hasło</a>
-                            <a class="btn btn-danger my-table-button" href="/my_user_delete/{{ my_user.id }}/">Usuń</a>
+                            <a class="btn btn-info my-table-button" href="{% url 'user-edit' id_user=user.id %}">Edytuj</a>
+                            <a class="btn btn-info my-table-button" href="{% url 'user-password' id_user=user.id %}">Hasło</a>
+                            <a class="btn btn-danger my-table-button" href="{% url 'user-delete' pk=user.id %}">Usuń</a>
                         </td>
                     </tr>
                 {% empty %}
@@ -92,37 +92,37 @@
         </table>
         <div>
             <ul class="pagination justify-content-center">
-                {% if my_user_list.has_previous %}
+                {% if user_list.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ my_user_list.previous_page_number }}">Poprzednia strona</a>
+                        <a class="page-link" href="?page={{ user_list.previous_page_number }}">Poprzednia strona</a>
                     </li>
                 {% endif %}
-                {% if my_user_list.number|add:'-4' > 1 %}
+                {% if user_list.number|add:'-4' > 1 %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ my_user_list.number|add:'-5' }}">&hellip;</a>
+                        <a class="page-link" href="?page={{ user_list.number|add:'-5' }}">&hellip;</a>
                     </li>
                 {% endif %}
-                {% if my_user_list.paginator.num_pages <= 1 %}
+                {% if user_list.paginator.num_pages <= 1 %}
                     {{ pass }}
                 {% else %}
-                {% for i in my_user_list.paginator.page_range %}
-                    {% if my_user_list.number == i %}
+                {% for i in user_list.paginator.page_range %}
+                    {% if user_list.number == i %}
                         <li class="page-item active" aria-current="page">
                             <span class="page-link">{{ i }}</span>
                         </li>
-                    {% elif i > my_user_list.number|add:'-5' and i < my_user_list.number|add:'5' %}
+                    {% elif i > user_list.number|add:'-5' and i < user_list.number|add:'5' %}
                         <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
                     {% endif %}
                 {% endfor %}
                 {% endif %}
-                {% if my_user_list.paginator.num_pages > my_user_list.number|add:'4' %}
+                {% if user_list.paginator.num_pages > user_list.number|add:'4' %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ my_user_list.number|add:'5' }}">&hellip;</a>
+                        <a class="page-link" href="?page={{ user_list.number|add:'5' }}">&hellip;</a>
                     </li>
                 {% endif %}
-                {% if my_user_list.has_next %}
+                {% if user_list.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ my_user_list.next_page_number }}">Następna strona</a>
+                        <a class="page-link" href="?page={{ user_list.next_page_number }}">Następna strona</a>
                     </li>
                 {% endif %}
             </ul>

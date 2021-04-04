@@ -12,10 +12,12 @@
                 <div class="col">
                     <b>{{ month_look|date:"F Y"}}</b>
                     {% if change_month.0 %}
-                        <a class="btn btn-success" href="/reservation/?month_look={{ change_month.0 }}">&lt; Poprzedni</a>
+                        <a class="btn btn-success"
+                           href="{% url 'reservation' %}?month_look={{ change_month.0 }}">&lt; Poprzedni</a>
                     {% endif %}
                     {% if change_month.1 %}
-                        <a class="btn btn-success" href="/reservation/?month_look={{ change_month.1 }}">Następny &gt;</a>
+                        <a class="btn btn-success"
+                           href="{% url 'reservation' %}?month_look={{ change_month.1 }}">Następny &gt;</a>
                     {% endif %}
                 </div>
                 <div class="col d-flex justify-content-end">
@@ -64,9 +66,12 @@
                                     <span class="dropdown-item"><b>{{ item.2.patient }}</b></span>
                                     <span class="dropdown-item"><b>Od {{ item.2.start_reservation|date:"Y-m-d" }}
                                         do {{ item.2.end_reservation|date:"Y-m-d" }}</b></span>
-                                    <a class="dropdown-item" href="/reservation_edit/{{ item.2.id }}/">Edytuj</a>
-                                    <a class="dropdown-item" href="/reservation_delete/{{ item.2.id }}/">Usuń</a>
-                                    <a class="dropdown-item" href="/reservation/{{ item.2.patient.id }}/">Wszystkie</a>
+                                    <a class="dropdown-item"
+                                       href="{% url 'reservation-edit' id_reservation=item.2.id %}">Edytuj</a>
+                                    <a class="dropdown-item"
+                                       href="{% url 'reservation-delete' pk=item.2.id %}">Usuń</a>
+                                    <a class="dropdown-item"
+                                       href="{% url 'reservation-patient' id_my_user=item.2.patient.id %}">Wszystkie</a>
                                 </div>
                             </td>
                         {% else %}
@@ -78,7 +83,7 @@
                                     <span class="dropdown-item"><b>Wolny termin</b></span>
                                     <span class="dropdown-item"><b>Od {{ item.2 }} do {{ item.3 }}</b></span>
                                     <a class="dropdown-item"
-                                       href="/reservation_add/?room={{ room.id }}&start={{ item.2 }}&end={{ item.3 }}&month_start={{ month.0 }}&month_end={{ month.1 }}">Dodaj</a>
+                                       href="{% url 'reservation-add' %}?room={{ room.id }}&start={{ item.2 }}&end={{ item.3 }}&month_start={{ month.0 }}&month_end={{ month.1 }}">Dodaj</a>
                                 </div>
                                 {% endif %}
                             </td>

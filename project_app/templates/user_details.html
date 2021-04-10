@@ -1,39 +1,40 @@
 {% extends 'base.html' %}
-{% block title %} MyUser Details {% endblock %}
+{% block title %} User Details {% endblock %}
 {% block content %}
     <div class="container my-container">
         <div class="row">
-            <h3>Szczegóły profilu, twój status: {{ my_user.get_status_display }} </h3>
+            <h3>Szczegóły profilu</h3>
         </div>
         <table class="table">
             <thead>
                 <tr class="d-flex">
-                    <th scope="col" class="col-3">Nick:</th>
-                    <td class="col">{{ my_user.username }}</td>
+                    <th scope="col" class="col-3">Status:</th>
+                    <td class="col">{{ user.get_status_display }}</td>
                 </tr>
             </thead>
             <tbody>
                 <tr class="d-flex">
                     <th scope="col" class="col-3">Imię:</th>
-                    <td class="col">{{ my_user.first_name }}</td>
+                    <td class="col">{{ user.first_name }}</td>
                 </tr>
                 <tr class="d-flex">
                     <th scope="col" class="col-3">Nazwisko:</th>
-                    <td class="col">{{ my_user.last_name }}</td>
+                    <td class="col">{{ user.last_name }}</td>
                 </tr>
                 <tr class="d-flex">
                     <th scope="col" class="col-3">Email:</th>
-                    <td class="col">{{ my_user.email }}</td>
+                    <td class="col">{{ user.email }}</td>
                 </tr>
                 <tr class="d-flex">
                     <th scope="col" class="col-3">Numer telefonu:</th>
-                    <td class="col">{{ my_user.tel_number }}</td>
+                    <td class="col">{{ user.phone }}</td>
                 </tr>
             </tbody>
         </table>
         <div>
-            <a class="btn btn-info" href="{% url 'my-user-edit' id_my_user=my_user.id %}">Edytuj dane</a>
-            <a class="btn btn-info" href="{% url 'my-user-password' id_my_user=my_user.id %}">Zmień hasło</a>
+            <a class="btn btn-info" href="{% url 'user-edit' pk=user.id %}">Edytuj dane</a>
+            <a class="btn btn-info" href="{% url 'user-password' %}">Zmień hasło</a>
+            <a class="btn btn-danger" href="{% url 'user-delete' pk=user.id %}">Usuń profil</a>
         </div>
     </div>
 {% endblock %}

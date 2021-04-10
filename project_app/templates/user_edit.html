@@ -1,27 +1,21 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
-{% block title %} MyUser Edit {% endblock %}
+{% block title %} User Edit {% endblock %}
 {% block content %}
     <div class="container my-container">
         <div class="row">
             <div class="col">
-                {% if request.user.status == 1 %}
-                    <h3>Edycja danych: {{ my_user.first_name }} {{ my_user.last_name }}</h3>
-                {% else %}
-                    <h3>Edycja danych</h3>
-                {% endif %}
+                <h3>Edycja profilu</h3>
             </div>
         </div>
         <form class="form-control" action="" method="POST">
-            {% if message %}
-                <div class="row my-form-row">
-                    <h4 class="text-danger">{{ message }}</h4>
-                </div>
-            {% endif %}
             {% csrf_token %}
             <div class="row my-form-row">
                 <div class="col-6">
-                    {{ form.nick|as_crispy_field }}
+                    {{ form.first_name|as_crispy_field }}
+                </div>
+                <div class="col-6">
+                    {{ form.last_name|as_crispy_field }}
                 </div>
             </div>
             <div class="row my-form-row">
@@ -29,7 +23,7 @@
                     {{ form.email|as_crispy_field }}
                 </div>
                 <div class="col-6">
-                    {{ form.tel_number|as_crispy_field }}
+                    {{ form.phone|as_crispy_field }}
                 </div>
             </div>
             <div class="row my-form-row">

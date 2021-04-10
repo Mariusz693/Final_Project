@@ -1,35 +1,43 @@
 {% extends 'base.html' %}
-{% block title %} MyUser Delete {% endblock %}
+{% block title %} User Delete {% endblock %}
 {% block content %}
     <div class="container my-container">
         <div class="row">
-            <div class="col">
-                <h3>Potwierdź usunięcie {{ myuser.username }}</h3>
+            {% if messages %}
+            {% for message in messages %}
+            <div class="col" style="color: red;">
+                <h3>{{ message }}</h3>
             </div>
+            {% endfor %}
+            {% else %}
+            <div class="col">
+                <h3>Potwierdź usunięcie profilu</h3>
+            </div>
+            {% endif %}
         </div>
         <table class="table">
             <thead>
                 <tr class="d-flex">
                     <th scope="col" class="col-3">Status:</th>
-                    <td class="col">{{ myuser.get_status_display }}</td>
+                    <td class="col">{{ user.get_status_display }}</td>
                 </tr>
             </thead>
             <tbody>
                 <tr class="d-flex">
                     <th scope="col" class="col-3">Imię:</th>
-                    <td class="col">{{ myuser.first_name }}</td>
+                    <td class="col">{{ user.first_name }}</td>
                 </tr>
                 <tr class="d-flex">
                     <th scope="col" class="col-3">Nazwisko:</th>
-                    <td class="col">{{ myuser.last_name }}</td>
+                    <td class="col">{{ user.last_name }}</td>
                 </tr>
                 <tr class="d-flex">
                     <th scope="col" class="col-3">Email:</th>
-                    <td class="col">{{ myuser.email }}</td>
+                    <td class="col">{{ user.email }}</td>
                 </tr>
                 <tr class="d-flex">
                     <th scope="col" class="col-3">Numer telefonu:</th>
-                    <td class="col">{{ myuser.tel_number }}</td>
+                    <td class="col">{{ user.phone }}</td>
                 </tr>
             </tbody>
         </table>

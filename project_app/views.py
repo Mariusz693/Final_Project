@@ -3,17 +3,19 @@ import json
 
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect
-from django.views.generic.edit import FormView, DeleteView, View
+from django.views.generic.edit import View, FormView, DeleteView, CreateView, UpdateView
 from django.contrib.auth import login, logout
+from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
+from django.contrib import messages
+from django.contrib.auth import authenticate
 
-from .models import User, Room, Reservation, Timetable, HOUR_CHOICES
-from .forms import UserLoginForm, UserCreateForm
-# , MyUserUpdateForm, MyUserPasswordForm
+from .models import User, Room, Reservation, Timetable, UserUniqueToken, HOUR_CHOICES
+from .forms import UserLoginForm, UserPasswordForm
 from .function import generate_list, generate_month, generate_week_timetable, change_day_to_data, set_day_look, \
      generate_week_user
 
@@ -120,6 +122,7 @@ class EmployeeListView(LoginRequiredMixin, UserPassesTestMixin, View):
     Only for user with status admin
     """
     def test_func(self):
+        
         return self.request.user.status == 1
 
     def get(self, request):
@@ -133,200 +136,159 @@ class EmployeeListView(LoginRequiredMixin, UserPassesTestMixin, View):
         )
 
 
-class UserCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
+class UserCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     """
     Return the add person form view, with the choice of patient or employee
     Only for user with status admin
     """
+    model = User
+    fields = ['first_name', 'last_name', 'email', 'phone', 'status']
+    template_name = 'user_add.html'
+
     def test_func(self):
+        
         return self.request.user.status == 1
 
+    def form_valid(self, form):
+        
+        user = User.objects.create_user(
+            email=form.cleaned_data['email'],
+            first_name=form.cleaned_data['first_name'],
+            last_name=form.cleaned_data['last_name'],
+            phone=form.cleaned_data['phone'],
+            status=int(form.cleaned_data['status']),
+            is_active=False
+        )
+        new_token = UserUniqueToken.objects.create(user=user)
+        send_mail(
+            subject='Rejestracja konta',
+            message=f'''Twoje konto zostało utworzone w naszym serwisie, twój link do aktywacji konta:
+                {self.request.get_host()}{reverse("login")}?token={new_token.token}''',
+            from_email=self.request.user.email,
+            recipient_list=[user.email],
+        )
+
+        if user.status == 2:
+            success_url = reverse_lazy('employee-list')
+    
+        elif user.status == 3:    
+            success_url = reverse_lazy('patient-list')
+        
+        else:
+            success_url = reverse_lazy('index')
+
+        return HttpResponseRedirect(success_url)
+
+
+class UserDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    """
+    Return the delete person form view, patient or employee
+    Only for user with status admin
+    """
+    model = User
+    template_name = 'user_delete.html'
+
+    def test_func(self):
+        
+        return self.request.user.status == 1 or self.request.user.id == self.kwargs['pk']
+    
+    def delete(self, request, *args, **kwargs):
+        
+        user = self.get_object()
+
+        if user.status == 1 and User.objects.filter(status=1).count() == 1:
+            
+            messages.set_level(request, messages.ERROR)
+            messages.error(request, 'Nie można usunąć ostatniego administratora !!!')
+            
+            return render(request, template_name=self.template_name)
+        
+        if request.user.id != user.id:
+
+            if user.status == 2:
+                success_url = reverse_lazy('employee-list')
+            
+            else:
+                success_url = reverse_lazy('patient-list')
+        
+        else:
+            success_url = reverse_lazy('index')
+
+        user.delete()
+
+        return HttpResponseRedirect(success_url)
+
+
+class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """
+    Return the edit person form view of patient or employee
+    All user
+    """
+    model = User
+    fields = ['first_name', 'last_name', 'email', 'phone']
+    template_name = 'user_edit.html'
+        
+    def test_func(self):
+
+        return self.request.user.id == self.kwargs['pk']
+
+    def get_success_url(self):
+    	
+        return reverse_lazy('user-details', args=[self.get_object().id])
+    
+    
+class UserDetailsView(LoginRequiredMixin, View):
+    """
+    Return the view of details patient, employee or admin
+    All user
+    """
     def get(self, request):
 
-        form = UserCreateForm()
+        user = User.objects.get(id=request.user.id)
 
         return render(
             request,
-            'user_add.html',
+            'user_details.html',
+            context={'user': user}
+        )
+
+
+class UserPasswordView(LoginRequiredMixin, View):
+    """
+    Return the set password form view of patient or employee
+    All user
+    """       
+    def get(self, request):
+
+        form = UserPasswordForm(initial={
+            'email': request.user.email
+        })
+
+        return render(
+            request,
+            'user_password.html',
             context={'form': form}
         )
 
-    # def post(self, request):
+    def post(self, request):
 
-    #     form = MyUserCreateForm(request.POST)
-    #     if form.is_valid():
-    #         nick = form.cleaned_data['nick']
-    #         first_name = form.cleaned_data['first_name']
-    #         last_name = form.cleaned_data['last_name']
-    #         email = form.cleaned_data['email']
-    #         tel_number = form.cleaned_data['tel_number']
-    #         status = int(form.cleaned_data['status'])
-    #         password = form.cleaned_data['password']
-    #         new_patient = MyUser.objects.create_user(
-    #             username=nick,
-    #             first_name=first_name,
-    #             last_name=last_name,
-    #             email=email,
-    #             tel_number=tel_number,
-    #             password=password,
-    #             status=status
-    #         )
+        form = UserPasswordForm(request.POST)
 
-    #         if status == 2:
-    #             return redirect('employee-list')
-    #         else:
-    #             return redirect('patient-list')
+        if form.is_valid():
+            user = request.user
+            password = form.cleaned_data['password_new']
+            user.set_password(password)
+            user.save()
 
-    #     return render(
-    #         self.request,
-    #         'my_user_add.html',
-    #         context={'form': form, 'message': 'Błąd danych'}
-        # )
+            logout(request)
 
+            return redirect('login')
 
-# class MyUserDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-#     """
-#     Return the delete person form view, patient or employee
-#     Only for user with status admin
-#     """
-#     def test_func(self):
-#         return self.request.user.status == 1
-
-#     model = MyUser
-#     template_name = 'my_user_delete.html'
-
-#     def delete(self, request, *args, **kwargs):
-#         my_user = self.get_object()
-
-#         if my_user.status == 2:
-#             success_url = '/employee_list/'
-#         else:
-#             success_url = '/patient_list/'
-
-#         my_user.delete()
-
-#         return HttpResponseRedirect(success_url)
-
-
-# class MyUserUpdateView(LoginRequiredMixin, View):
-#     """
-#     Return the edit person form view of patient or employee
-#     All user
-#     """
-#     def get(self, request, id_my_user):
-
-#         if request.user.status != 1 and request.user.id != id_my_user:
-#             return redirect('index')
-
-#         my_user = MyUser.objects.get(id=id_my_user)
-#         form = MyUserUpdateForm(initial={
-#             'nick': my_user.username,
-#             'email': my_user.email,
-#             'tel_number': my_user.tel_number,
-#         })
-
-#         return render(
-#             request,
-#             'my_user_edit.html',
-#             context={'form': form, 'my_user': my_user}
-#         )
-
-#     def post(self, request, id_my_user):
-
-#         if request.user.status != 1 and request.user.id != id_my_user:
-#             return redirect('index')
-
-#         my_user = MyUser.objects.get(id=id_my_user)
-#         status = my_user.status
-#         form = MyUserUpdateForm(request.POST)
-
-#         if form.is_valid():
-#             my_user.username = form.cleaned_data['nick']
-#             my_user.email = form.cleaned_data['email']
-#             my_user.tel_number = form.cleaned_data['tel_number']
-
-#             my_user.save()
-
-#             if request.user.status == 1:
-#                 if status == 2:
-#                     return redirect('employee-list')
-#                 if status == 3:
-#                     return redirect('patient-list')
-
-#             return redirect('my-user-details', my_user.id)
-
-#         return render(
-#             self.request,
-#             'my_user_edit.html',
-#             context={'form': form, 'message': 'Błąd danych'}
-#         )
-
-
-# class MyUserDetailsView(LoginRequiredMixin, View):
-#     """
-#     Return the view of details patient or employee
-#     All user
-#     """
-#     def get(self, request, id_my_user):
-
-#         if request.user.status != 1 and request.user.id != id_my_user:
-#             return redirect('index')
-
-#         my_user = MyUser.objects.get(id=id_my_user)
-
-#         return render(
-#             request,
-#             'my_user_details.html',
-#             context={'my_user': my_user}
-#         )
-
-
-# class MyUserPasswordView(LoginRequiredMixin, View):
-#     """
-#     Return the set password form view of patient or employee
-#     All user
-#     """
-#     def get(self, request, id_my_user):
-
-#         if request.user.status != 1 and request.user.id != id_my_user:
-#             return redirect('index')
-
-#         my_user = MyUser.objects.get(id=id_my_user)
-#         form = MyUserPasswordForm()
-
-#         return render(
-#             request,
-#             'my_user_password.html',
-#             context={'form': form, 'my_user': my_user}
-#         )
-
-#     def post(self, request, id_my_user):
-
-#         if request.user.status != 1 and request.user.id != id_my_user:
-#             return redirect('index')
-
-#         my_user = MyUser.objects.get(id=id_my_user)
-#         status = my_user.status
-#         form = MyUserPasswordForm(request.POST)
-
-#         if form.is_valid():
-#             password = form.cleaned_data['password']
-#             my_user.set_password(password)
-#             my_user.save()
-
-#             if request.user.status == 1:
-#                 if status == 2:
-#                     return redirect('employee-list')
-
-#                 return redirect('patient-list')
-
-#             return redirect('login')
-
-#         return render(
-#             self.request,
-#             'my_user_edit.html',
-#             context={'form': form, 'message': 'Błąd danych'}
-#         )
+        return render(
+            self.request,
+            'user_password.html',
+            context={'form': form}
+        )
 
 
 # class ReservationView(LoginRequiredMixin, UserPassesTestMixin, View):

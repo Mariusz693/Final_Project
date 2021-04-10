@@ -4,6 +4,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 from .managers import CustomUserManager
+from .validators import validate_tel_number
 
 HOUR_CHOICES = (
     (1, '8:00 - 11:00'),
@@ -20,9 +21,11 @@ STATUS_CHOICE = (
 class User(AbstractUser):
     
     username = None
-    email = models.EmailField(verbose_name='email address', max_length=255, unique=True)
-    phone = models.CharField(max_length=9, blank=True)
-    status = models.SmallIntegerField(choices=STATUS_CHOICE, default=3)
+    first_name = models.CharField(verbose_name='Imię', max_length=64)
+    last_name = models.CharField(verbose_name='Nazwisko', max_length=64)
+    email = models.EmailField(verbose_name='Email', max_length=255, unique=True)
+    phone = models.CharField(verbose_name='Telefon (+48...)', max_length=9, validators=[validate_tel_number])
+    status = models.SmallIntegerField(choices=STATUS_CHOICE)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

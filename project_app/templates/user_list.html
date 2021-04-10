@@ -42,11 +42,11 @@
                     {% else %}
                         <th scope="col" class="col-1">LP</th>
                     {% endif %}
-                    <th scope="col" class="col-2">IMIĘ I NAZWISKO</th>
-                    <th scope="col" class="col-2">NICK</th>
-                    <th scope="col" class="col-2">EMAIL</th>
+                    <th scope="col" class="col-4">IMIĘ I NAZWISKO</th>
+                    <th scope="col" class="col-3">EMAIL</th>
                     <th scope="col" class="col-2">NR TELEFONU</th>
-                    <th scope="col" class="col-3 text-center">AKCJE</th>
+                    <th scope="col" class="col-1">AKTYWNY</th>
+                    <th scope="col" class="col-1 text-center">#</th>
                 </tr>
             </thead>
             <tbody>
@@ -54,39 +54,40 @@
                     <tr class="d-flex">
                         {% if message == 1 %}
                             <td scope="row" class="col-1">{{ user.counter }}</td>
-                            <th scope="row" class="col-2">{{ user }}</th>
-                            <td class="col-2">
-                                <a href="{% url 'reservation-patient' id_user=user.id %}">{{ user.username }}</a>
-                            </td>
+                            <th scope="row" class="col-4">
+                                <a href="{% url 'reservation-patient' id_user=user.id %}">{{ user }}</a>
+                            </th>
                         {% elif message == 2 %}
                             <td scope="row" class="col-1">{{ user.room }}</td>
-                            <th scope="row" class="col-2">{{ user }}</th>
-                            <td class="col-2">
-                                <a href="{% url 'timetable-user' id_user=user.id %}?week_look=0">{{ user.username }}</a>
-                            </td>
+                            <th scope="row" class="col-4">
+                                <a href="{% url 'timetable-user' id_user=user.id %}?week_look=0">{{ user }}</a>
+                            </th>
                         {% elif message %}
                             <td scope="row" class="col-1">{{ forloop.counter }}</td>
-                            <th scope="row" class="col-2">{{ user }}</th>
-                            <td class="col-2">
-                                <a href="{% url 'reservation-patient' id_user=user.id %}">{{ user.username }}</a>
-                            </td>
+                            <th scope="row" class="col-4">
+                                <a href="{% url 'reservation-patient' id_user=user.id %}">{{ user }}</a>
+                            </th>
                         {% else %}
                             <td scope="row" class="col-1">{{ forloop.counter }}</td>
-                            <th scope="row" class="col-2">{{ user }}</th>
-                            <td class="col-2">
-                                <a href="{% url 'timetable-user' id_user=user.id %}?week_look=0">{{ user.username }}</a>
-                            </td>
+                            <th scope="row" class="col-4">
+                                <a href="{% url 'timetable-user' id_user=user.id %}?week_look=0">{{ user }}</a>
+                            </th>
                         {% endif %}
-                        <td class="col-2">{{ user.email }}</td>
-                        <td class="col-2">{{ user.phone }}</td>
-                        <td class="col-3 d-flex align-items-center justify-content-center flex-wrap">
-                            <a class="btn btn-info my-table-button" href="{% url 'user-edit' id_user=user.id %}">Edytuj</a>
-                            <a class="btn btn-info my-table-button" href="{% url 'user-password' id_user=user.id %}">Hasło</a>
-                            <a class="btn btn-danger my-table-button" href="{% url 'user-delete' pk=user.id %}">Usuń</a>
+                        <td scope="row" class="col-3">{{ user.email }}</td>
+                        <td scope="row" class="col-2">{{ user.phone }}</td>
+                        <td scope="row" class="col-1" style="text-align: center;">
+                            {% if user.is_active %}
+                                &check;
+                            {% else %}
+                                &cross;
+                            {% endif %}
+                        </td>
+                        <td scope="row" class="col-1 d-flex align-items-center justify-content-center flex-wrap">
+                            <a class="btn btn-outline-danger my-table-button" href="{% url 'user-delete' pk=user.id %}">Usuń</a>
                         </td>
                     </tr>
                 {% empty %}
-                    <tr><td colspan="6">Brak osób w bazie</td></tr>
+                    <tr><td colspan="5">Brak osób w bazie</td></tr>
                 {% endfor %}
             </tbody>
         </table>

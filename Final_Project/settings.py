@@ -68,6 +68,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'project_app.my_context_processor.my_cp',
             ],
         },
     },
@@ -78,6 +79,8 @@ WSGI_APPLICATION = 'Final_Project.wsgi.application'
 AUTH_USER_MODEL = 'project_app.User'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
+
+# DATE_INPUT_FORMATS = ['YY-MM-DD']
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators

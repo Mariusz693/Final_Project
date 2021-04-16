@@ -32,9 +32,9 @@
             </tbody>
         </table>
         <div>
-            <a class="btn btn-info" href="{% url 'user-edit' pk=user.id %}">Edytuj dane</a>
+            <a class="btn btn-info" href="{% url 'user-edit' %}">Edytuj dane</a>
             <a class="btn btn-info" href="{% url 'user-password' %}">Zmień hasło</a>
-            <a class="btn btn-danger" href="{% url 'user-delete' pk=user.id %}">Usuń profil</a>
+            <a class="btn btn-danger" href="{% url 'user-delete' %}">Usuń profil</a>
         </div>
     </div>
 {% endblock %}

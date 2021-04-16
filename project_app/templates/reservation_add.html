@@ -1,36 +1,42 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
-{% block title %} Login {% endblock %}
+{% block title %} Reservation Add {% endblock %}
 {% block content %}
     <div class="container my-container">
         <div class="row">
             <div class="col">
-                <h3>Logowanie</h3>
+                <h3>Rezerwacja: Pokój nr {{ form.room.value }}</h3>
             </div>
         </div>
         <form class="form-control" action="" method="POST">
             {% csrf_token %}
             <div class="row my-form-row">
                 <div class="col-6">
-                    {{ form.email|as_crispy_field }}
+                    {{ form.patient|as_crispy_field }}
+                </div>
+                <div class="col-6">
+                    {{ form.room|as_crispy_field }}
                 </div>
             </div>
             <div class="row my-form-row">
                 <div class="col-6">
-                    {{ form.password|as_crispy_field }}
+                    {{ form.start_reservation|as_crispy_field }}
+                </div>
+                <div class="col-6">
+                    {{ form.end_reservation|as_crispy_field }}
                 </div>
             </div>
             <div class="row my-form-row">
-                <div class="col-6">
-                    <a href="{% url 'reset-password' %}">Zapomniałem hasło</a>
+                <div class="col-12">
+                    {{ form.message|as_crispy_field }}
                 </div>
             </div>
             <div class="row my-form-row">
                 <div class="col">
-                    <input type="submit" class="btn btn-success" value="Zaloguj">
+                    <input type="submit" class="btn btn-success" value="Dodaj">
                 </div>
                 <div class="col d-flex justify-content-end">
-                    <a class="btn btn-danger" href="{% url 'index' %}">Anuluj</a>
+                    <a class="btn btn-danger" href="{% url 'reservation' %}?month_look={{ request.GET.selected_month }}">Anuluj</a>
                 </div>
             </div>
         </form>

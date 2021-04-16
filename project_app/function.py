@@ -4,7 +4,7 @@ import calendar
 
 
 DAY_NAMES = ('Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd')
-
+MONTH_SYMBOLS = ('I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII')
 
 class Calendar(LocaleHTMLCalendar):
     def __init__(self):
@@ -21,12 +21,29 @@ def generate_month(month_look):
         cal = cal[1:]
 
     for week in cal:
-        week_list.append(f'{week[0].day}.{week[0].month} - {week[6].day}.{week[6].month}')
+        week_list.append(f'{week[0].day}.{MONTH_SYMBOLS[week[0].month - 1]} - {week[6].day}.{MONTH_SYMBOLS[week[6].month - 1]}')
         for i, day in enumerate(week):
-            day_list.append(day)
             day_name.append(DAY_NAMES[i])
+            day_list.append(day)
 
-    return [week_list, day_list, day_name]
+    return [week_list, day_name, day_list]
+
+
+# def generate_list():
+
+#     today = datetime.date.today()
+#     my_list = []
+#     year = today.year - 1
+#     month = today.month
+#     for i in range(36):
+#         next_month = datetime.date(year=year, month=month, day=1)
+#         my_list.append([next_month, str(next_month)[:-3]])
+#         month += 1
+#         if month > 12:
+#             month = 1
+#             year += 1
+
+#     return my_list
 
 
 def generate_list():
@@ -35,9 +52,9 @@ def generate_list():
     my_list = []
     year = today.year - 1
     month = today.month
-    for i in range(36):
+    for _ in range(36):
         next_month = datetime.date(year=year, month=month, day=1)
-        my_list.append([next_month, str(next_month)])
+        my_list.append(next_month)
         month += 1
         if month > 12:
             month = 1
@@ -46,12 +63,12 @@ def generate_list():
     return my_list
 
 
-def change_day_to_data(my_date):
+def change_day_to_date(my_date):
 
     table = my_date.split('-')
     year = int(table[0])
     month = int(table[1])
-    day = int(table[2])
+    day = int(table[2]) if len(table) > 2 else 1
 
     return datetime.date(year=year, month=month, day=day)
 

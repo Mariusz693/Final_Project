@@ -44,7 +44,7 @@
                     <input type="submit" class="btn btn-success" value="Potwierdź">
                 </div>
                 <div class="col d-flex justify-content-end">
-                    <a class="btn btn-danger" onclick="history.back();">Anuluj</a>
+                    <a class="btn btn-danger" href="{% url 'reservation' %}?month_look={{ request.GET.selected_month }}">Anuluj</a>
                 </div>
             </div>
         </form>

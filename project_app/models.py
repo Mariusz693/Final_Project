@@ -46,11 +46,11 @@ class Room(models.Model):
 
 class Reservation(models.Model):
     
-    room = models.ForeignKey(Room, on_delete=models.CASCADE)
-    start_reservation = models.DateField()
-    end_reservation = models.DateField()
-    message = models.TextField(null=True)
-    patient = models.ForeignKey(User, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, verbose_name='Pokój', on_delete=models.CASCADE)
+    start_reservation = models.DateField(verbose_name='Data rozpoczęcia')
+    end_reservation = models.DateField(verbose_name='Data zakończenia')
+    message = models.TextField(verbose_name='Wiadomość', null=True)
+    patient = models.ForeignKey(User, verbose_name='Pacjent', on_delete=models.CASCADE)
 
 
 class Timetable(models.Model):

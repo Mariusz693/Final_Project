@@ -10,14 +10,14 @@
         <form class="my-form" action="" method="GET">
             <div class="row">
                 <div class="col">
-                    <b>{{ month_look|date:"F Y"}}</b>
+                    <b>{{ selected_date|date:"F Y"}}</b>
                     {% if change_month.0 %}
                         <a class="btn btn-success"
-                           href="{% url 'reservation' %}?month_look={{ change_month.0 }}">&lt; Poprzedni</a>
+                           href="{% url 'reservation' %}?month_look={{ change_month.0|date:'Y-m' }}">&lt; Poprzedni</a>
                     {% endif %}
                     {% if change_month.1 %}
                         <a class="btn btn-success"
-                           href="{% url 'reservation' %}?month_look={{ change_month.1 }}">Następny &gt;</a>
+                           href="{% url 'reservation' %}?month_look={{ change_month.1|date:'Y-m' }}">Następny &gt;</a>
                     {% endif %}
                 </div>
                 <div class="col d-flex justify-content-end">
@@ -25,8 +25,8 @@
                     <label for="month_look"></label>
                     <select class="custom-select" id="month_look" name="month_look">
                         {% for month in month_list %}
-                        <option value="{{ month.1 }}" {% if month.0 == month_look %} selected {% endif %}>
-                            {{ month.0|date:"F Y" }}
+                        <option value="{{ month|date:'Y-m' }}" {% if month == selected_date %} selected {% endif %}>
+                            {{ month|date:"F Y" }}
                         </option>
                         {% endfor %}
                     </select>
@@ -34,34 +34,34 @@
                 </div>
             </div>
         </form>
-        <table class="table table-bordered my-table-border" style="table-layout:fixed">
+        <table class="table my-table-border" style="table-layout:fixed">
             <thead>
             <tr>
-                <th class="col-2 text-center" rowspan="3">Numer pokoju</th>
-                {% for week in month_look_list.0 %}
-                    <th colspan="7" class="text-center"> {{ week }}</th>
+                <th class="col-2 text-center my-call-border" rowspan="3">Numer pokoju</th>
+                {% for week in selected_month_list.0 %}
+                    <th colspan="7" class="text-center my-call-border"> {{ week }}</th>
                 {% endfor %}
             </tr>
             <tr>
-                {% for day in month_look_list.2 %}
-                    <th class="text-center">{{ day }}</th>
+                {% for day in selected_month_list.1 %}
+                    <th class="my-call-border">{{ day }}</th>
                 {% endfor %}
             </tr>
             <tr>
-                {% for day in month_look_list.1 %}
-                    <td class="text-center">{{ day|date:"j" }}</td>
+                {% for day in selected_month_list.2 %}
+                    <th class="my-call-border">{{ day|date:"j" }}</th>
                 {% endfor %}
             </tr>
             </thead>
             <tbody>
             {% for room in rooms %}
                 <tr>
-                    <td><p class="my-table-room-list">{{ room }}</p></td>
+                    <th class="my-table-room-list"><p>{{ room }}</p></th>
                     {% for item in room.reserve %}
                         {% if item.0 %}
-                            <td colspan="{{ item.1 }}" style="background-color: #6ebe96;">
+                            <td colspan="{{ item.1 }}" class="my-reservation-element">
                                 <a class="nav-link dropdown-toggle my-cursor" data-toggle="dropdown" aria-haspopup="true"
-                                       aria-expanded="false">{{ item.2.patient }}</a>
+                                       aria-expanded="false">{{ item.2.patient.last_name }}</a>
                                 <div class="dropdown-menu">
                                     <span class="dropdown-item"><b>{{ item.2.patient }}</b></span>
                                     <span class="dropdown-item"><b>Od {{ item.2.start_reservation|date:"Y-m-d" }}
@@ -69,21 +69,21 @@
                                     <a class="dropdown-item"
                                        href="{% url 'reservation-edit' id_reservation=item.2.id %}">Edytuj</a>
                                     <a class="dropdown-item"
-                                       href="{% url 'reservation-delete' pk=item.2.id %}">Usuń</a>
+                                       href="{% url 'reservation-delete' pk=item.2.id %}?selected_month={{ selected_date|date:'Y-m'}}">Usuń</a>
                                     <a class="dropdown-item"
-                                       href="{% url 'reservation-patient' id_my_user=item.2.patient.id %}">Wszystkie</a>
+                                       href="{% url 'reservation-patient' id_user=item.2.patient.id %}">Wszystkie</a>
                                 </div>
                             </td>
                         {% else %}
-                            <td colspan="{{ item.1 }}">
+                            <td colspan="{{ item.1 }}" class="my-free-element">
                                 {% if item.1 > 2 %}
                                 <a class="nav-link dropdown-toggle my-cursor" data-toggle="dropdown" aria-haspopup="true"
-                                       aria-expanded="false"></a>
+                                       aria-expanded="false">Dodaj</a>
                                 <div class="dropdown-menu">
                                     <span class="dropdown-item"><b>Wolny termin</b></span>
                                     <span class="dropdown-item"><b>Od {{ item.2 }} do {{ item.3 }}</b></span>
                                     <a class="dropdown-item"
-                                       href="{% url 'reservation-add' %}?room={{ room.id }}&start={{ item.2 }}&end={{ item.3 }}&month_start={{ month.0 }}&month_end={{ month.1 }}">Dodaj</a>
+                                       href="{% url 'reservation-add' %}?room={{ room.id }}&start={{ item.2|date:'Y-m-d' }}&end={{ item.3|date:'Y-m-d' }}&month_start={{ selected_month_list.2|first|date:'Y-m-d' }}&month_end={{ selected_month_list.2|last|date:'Y-m-d' }}&selected_month={{ selected_date|date:'Y-m'}}">Dodaj</a>
                                 </div>
                                 {% endif %}
                             </td>

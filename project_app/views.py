@@ -2,7 +2,7 @@ import datetime
 import json
 
 from django.http import HttpResponseRedirect, HttpResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic.edit import View, FormView, DeleteView, CreateView, UpdateView
 from django.contrib.auth import login, logout
 from django.core.mail import send_mail
@@ -15,8 +15,8 @@ from django.contrib import messages
 from django.contrib.auth import authenticate
 
 from .models import User, Room, Reservation, Timetable, UserUniqueToken, HOUR_CHOICES
-from .forms import UserLoginForm, UserPasswordForm
-from .function import generate_list, generate_month, generate_week_timetable, change_day_to_data, set_day_look, \
+from .forms import UserLoginForm, UserPasswordForm, PasswordSetForm, PasswordResetForm, ReservationAddForm
+from .function import generate_list, generate_month, generate_week_timetable, change_day_to_date, set_day_look, \
      generate_week_user
 
 
@@ -24,7 +24,6 @@ class IndexView(View):
     """
     Return base page
     """
-
     def get(self, request):
 
         return render(
@@ -63,7 +62,6 @@ class UserLogoutView(View):
     """
     Return logout view
     """
-
     def get(self, request):
 
         if self.request.user.is_authenticated:
@@ -163,7 +161,7 @@ class UserCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         send_mail(
             subject='Rejestracja konta',
             message=f'''Twoje konto zostało utworzone w naszym serwisie, twój link do aktywacji konta:
-                {self.request.get_host()}{reverse("login")}?token={new_token.token}''',
+                {self.request.get_host()}{reverse("set-password")}?token={new_token.token}''',
             from_email=self.request.user.email,
             recipient_list=[user.email],
         )
@@ -180,7 +178,7 @@ class UserCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         return HttpResponseRedirect(success_url)
 
 
-class UserDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class UserDeleteView(LoginRequiredMixin, DeleteView):
     """
     Return the delete person form view, patient or employee
     Only for user with status admin
@@ -188,9 +186,13 @@ class UserDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = User
     template_name = 'user_delete.html'
 
-    def test_func(self):
+    def get_object(self):
+
+        if self.request.user.status == 1 and self.request.GET.get('user_id'):
         
-        return self.request.user.status == 1 or self.request.user.id == self.kwargs['pk']
+            return get_object_or_404(User, id=self.request.GET.get('user_id'))
+        
+        return self.request.user
     
     def delete(self, request, *args, **kwargs):
         
@@ -219,7 +221,7 @@ class UserDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return HttpResponseRedirect(success_url)
 
 
-class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class UserUpdateView(LoginRequiredMixin, UpdateView):
     """
     Return the edit person form view of patient or employee
     All user
@@ -227,14 +229,14 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = User
     fields = ['first_name', 'last_name', 'email', 'phone']
     template_name = 'user_edit.html'
-        
-    def test_func(self):
-
-        return self.request.user.id == self.kwargs['pk']
+    
+    def get_object(self):
+       
+        return self.request.user
 
     def get_success_url(self):
     	
-        return reverse_lazy('user-details', args=[self.get_object().id])
+        return reverse_lazy('user-details')
     
     
 class UserDetailsView(LoginRequiredMixin, View):
@@ -253,233 +255,222 @@ class UserDetailsView(LoginRequiredMixin, View):
         )
 
 
-class UserPasswordView(LoginRequiredMixin, View):
+class UserPasswordView(LoginRequiredMixin, FormView):
     """
-    Return the set password form view of patient or employee
+    Return the change password form view of patient, employee or admin
     All user
-    """       
+    """    
+    form_class = UserPasswordForm
+    template_name = 'user_password.html'
+    success_url = reverse_lazy('login')
+
+    def get_initial(self):
+        
+        initial = super().get_initial()
+        initial['email'] = self.request.user.email
+        
+        return initial
+
+    def form_valid(self, form):
+    
+        user = self.request.user
+        password = form.cleaned_data['password_new']
+        user.set_password(password)
+        user.save()
+
+        logout(self.request)
+    
+        return super().form_valid(form)
+
+
+class PasswordSetView(FormView):
+    """
+    Return the set password form view of patient, employee or admin
+    All user
+    """    
+    form_class = PasswordSetForm
+    template_name = 'set_password.html'
+    success_url = reverse_lazy('login')
+
+    def form_valid(self, form):
+
+        token = self.request.GET.get('token')    
+        user_unique_token = get_object_or_404(UserUniqueToken, token=token)
+        user = user_unique_token.user
+
+        if user.is_active == False:
+            user.is_active = True
+        
+        password = form.cleaned_data['password_new']
+        user.set_password(password)
+        user.save()
+        user_unique_token.delete()
+
+        return super().form_valid(form)
+
+
+
+class PasswordResetView(FormView):
+
+    form_class = PasswordResetForm
+    template_name = 'reset_password.html'
+    success_url = reverse_lazy('index')
+
+    def form_valid(self, form):
+
+        user = User.objects.get(email=form.cleaned_data['email'])
+        new_token = UserUniqueToken.objects.create(user=user)
+
+        send_mail(
+            subject='Resetowanie hasla',
+            message=f'''Twój link do ustawienia nowego hasła:
+                {self.request.get_host()}{reverse("set-password")}?token={new_token.token}''',
+            from_email='webmaster@localhost',
+            recipient_list=[form.cleaned_data['email']],
+        )
+
+        return super().form_valid(form)
+
+
+class ReservationView(LoginRequiredMixin, UserPassesTestMixin, View):
+    """
+    Return the reservation patient view
+    Only for user with status admin
+    """
+    def test_func(self):
+        
+        return self.request.user.status == 1
+
     def get(self, request):
 
-        form = UserPasswordForm(initial={
-            'email': request.user.email
+        month_list = generate_list()
+        month_look = request.GET.get('month_look')
+        selected_date = change_day_to_date(month_look)
+        index_month = month_list.index(selected_date)
+        change_month = [
+            month_list[index_month-1] if index_month > 0 else None,
+            month_list[index_month+1] if index_month < len(month_list) - 1 else None,
+        ]
+        selected_month_list = generate_month(selected_date)
+        selected_month_len = len(selected_month_list[1])
+        day_list = selected_month_list[2]
+        month_day_start = day_list[0]
+        month_day_end = day_list[-1]
+        max_date = month_list[-1]
+        min_date = month_list[0]
+        rooms = Room.objects.all()
+        for room in rooms:
+            reservation_all = room.reservation_set.filter(
+                start_reservation__lte=month_day_end,
+                end_reservation__gte=month_day_start
+            ).order_by('start_reservation')
+            result_table = []
+            counter = 0
+            for reservation in reservation_all:
+                start_reservation = reservation.start_reservation
+                end_reservation = reservation.end_reservation
+                if (start_reservation - month_day_start).days <= 0:
+                    start_reservation = month_day_start
+                else:
+                    free_time = day_list.index(start_reservation) - counter
+                    if free_time:
+                        prev_reservation = room.reservation_set.filter(
+                            end_reservation__lte=day_list[counter]).order_by('-end_reservation').first()
+                        next_reservation = room.reservation_set.filter(
+                            start_reservation__gte=day_list[counter]).order_by('start_reservation').first()
+                        result_table.append([
+                            False,
+                            free_time,
+                            prev_reservation.end_reservation + datetime.timedelta(days=1) if prev_reservation else min_date,
+                            next_reservation.start_reservation - datetime.timedelta(days=1) if next_reservation else max_date
+                        ])
+                        counter += free_time
+                if (end_reservation - month_day_end).days > 0:
+                    end_reservation = month_day_end
+                during_reservation = (end_reservation - start_reservation).days + 1
+                result_table.append([True, during_reservation, reservation])
+                counter += during_reservation
+            counter = 0
+            for item in result_table:
+                counter += item[1]
+            free_time = selected_month_len - counter
+            if free_time:
+                prev_reservation = room.reservation_set.filter(
+                    end_reservation__lte=day_list[counter]).order_by('-end_reservation').first()
+                next_reservation = room.reservation_set.filter(
+                    start_reservation__gte=day_list[counter]).order_by('start_reservation').first()
+                result_table.append([
+                    False,
+                    free_time,
+                    prev_reservation.end_reservation + datetime.timedelta(days=1) if prev_reservation else min_date,
+                    next_reservation.start_reservation - datetime.timedelta(days=1) if next_reservation else max_date
+                ])
+            room.reserve = result_table
+
+        return render(
+                request,
+                'reservation.html',
+                context={
+                    'selected_date': selected_date,
+                    'change_month': change_month,
+                    'month_list': month_list,
+                    'selected_month_list': selected_month_list,
+                    'rooms': rooms
+                }
+            )
+
+class ReservationAddView(LoginRequiredMixin, UserPassesTestMixin, FormView):
+    """
+    Return the add reservation view
+    Only for user with status admin
+    """
+    form_class = ReservationAddForm
+    template_name = 'reservation_add.html'
+    
+    def test_func(self):
+        
+        return self.request.user.status == 1
+
+    def get_success_url(self):
+    
+        selected_month = self.request.GET.get('selected_month')
+        
+        return f'{reverse("reservation")}?month_look={selected_month}'
+    
+    def get_initial(self):
+        
+        initial = super().get_initial()
+        
+        start = self.request.GET.get('start')
+        end = self.request.GET.get('end')
+        room_id = self.request.GET.get('room')
+        month_start = self.request.GET.get('month_start')
+        month_end = self.request.GET.get('month_end')
+        
+        initial.update({
+            'room': Room.objects.get(room_number=room_id),
+            'start_reservation': month_start if month_start > start else start,
+            'end_reservation': month_end if month_end < end else end,
         })
 
-        return render(
-            request,
-            'user_password.html',
-            context={'form': form}
-        )
+        return initial
+    
+    def get_form_kwargs(self):
+        
+        kwargs = super().get_form_kwargs()
+        
+        kwargs.update({
+            'start_date': self.request.GET.get('start'),
+            'end_date': self.request.GET.get('end')
+        })
+        
+        return kwargs
 
-    def post(self, request):
+    def form_valid(self, form):
 
-        form = UserPasswordForm(request.POST)
+        form.save()
 
-        if form.is_valid():
-            user = request.user
-            password = form.cleaned_data['password_new']
-            user.set_password(password)
-            user.save()
-
-            logout(request)
-
-            return redirect('login')
-
-        return render(
-            self.request,
-            'user_password.html',
-            context={'form': form}
-        )
-
-
-# class ReservationView(LoginRequiredMixin, UserPassesTestMixin, View):
-#     """
-#     Return the reservation patient view
-#     Only for user with status admin
-#     """
-#     def test_func(self):
-#         return self.request.user.status == 1
-
-#     def get(self, request):
-
-#         month_list = generate_list()
-#         month_look = request.GET.get('month_look')
-#         if month_look == '0':
-#             today = datetime.date.today()
-#             month_look = str(datetime.date(year=today.year, month=today.month, day=1))
-#         month_look_data = change_day_to_data(month_look)
-#         index_month = month_list.index([month_look_data, month_look])
-#         change_month = [
-#             month_list[index_month-1][1] if index_month > 0 else None,
-#             month_list[index_month+1][1] if index_month < len(month_list) - 1 else None,
-#         ]
-#         month_look_list = generate_month(month_look_data)
-#         month_len = len(month_look_list[0]) * 7
-#         day_list = month_look_list[1]
-#         month_day_start = day_list[0]
-#         month_day_end = day_list[-1]
-#         max_date = month_list[-1][0]
-#         min_date = month_list[0][0]
-#         rooms = Room.objects.all()
-#         for room in rooms:
-#             reservation_all = room.reservation_set.filter(
-#                 start_reservation__lte=month_day_end,
-#                 end_reservation__gte=month_day_start
-#             ).order_by('start_reservation')
-#             result_table = []
-#             counter = 0
-#             for reservation in reservation_all:
-#                 start_reservation = reservation.start_reservation
-#                 end_reservation = reservation.end_reservation
-#                 if (start_reservation - month_day_start).days <= 0:
-#                     start_reservation = month_day_start
-#                 else:
-#                     free_time = day_list.index(start_reservation) - counter
-#                     prev_reservation = room.reservation_set.filter(
-#                         end_reservation__lte=day_list[counter]).order_by('-end_reservation').first()
-#                     next_reservation = room.reservation_set.filter(
-#                         start_reservation__gte=day_list[counter]).order_by('start_reservation').first()
-#                     result_table.append([
-#                         False,
-#                         free_time,
-#                         str(prev_reservation.end_reservation + datetime.timedelta(days=1) if prev_reservation else min_date),
-#                         str(next_reservation.start_reservation - datetime.timedelta(days=1) if next_reservation else max_date)
-#                     ])
-#                     counter += free_time
-#                 if (end_reservation - month_day_end).days > 0:
-#                     end_reservation = month_day_end
-#                 during_reservation = (end_reservation - start_reservation).days + 1
-#                 result_table.append([True, during_reservation, reservation])
-#                 counter += during_reservation
-#             counter = 0
-#             for item in result_table:
-#                 counter += item[1]
-#             free_time = month_len - counter
-#             if free_time:
-#                 prev_reservation = room.reservation_set.filter(
-#                     end_reservation__lte=day_list[counter]).order_by('-end_reservation').first()
-#                 next_reservation = room.reservation_set.filter(
-#                     start_reservation__gte=day_list[counter]).order_by('start_reservation').first()
-#                 result_table.append([
-#                     False,
-#                     free_time,
-#                     str(prev_reservation.end_reservation + datetime.timedelta(days=1) if prev_reservation else min_date),
-#                     str(next_reservation.start_reservation - datetime.timedelta(days=1) if next_reservation else max_date)
-#                 ])
-#             room.reserve = result_table
-
-#         return render(
-#                 request,
-#                 'reservation.html',
-#                 context={
-#                     'month_list': month_list,
-#                     'month_look': month_look_data,
-#                     'change_month': change_month,
-#                     'month_look_list': month_look_list,
-#                     'rooms': rooms,
-#                     'month': [str(day_list[0]), str(day_list[-1])]
-#                 }
-#             )
-
-
-# class ReservationAddView(LoginRequiredMixin, UserPassesTestMixin, View):
-#     """
-#     Return the add reservation view
-#     Only for user with status admin
-#     """
-#     def test_func(self):
-#         return self.request.user.status == 1
-
-#     def get(self, request):
-
-#         start = request.GET.get('start')
-#         end = request.GET.get('end')
-#         room_id = request.GET.get('room')
-#         month_start = request.GET.get('month_start')
-#         month_end = request.GET.get('month_end')
-#         room = Room.objects.get(id=room_id)
-#         patient_list = MyUser.objects.filter(status=3)
-#         return render(
-#             request,
-#             'reservation_form.html',
-#             context={
-#                 'room': room,
-#                 'start': start,
-#                 'end': end,
-#                 'patient_list': patient_list,
-#                 'month_start': month_start,
-#                 'month_end': month_end,
-#             }
-#         )
-
-#     def post(self, request):
-#         start_reservation = request.POST.get('start_reservation')
-#         end_reservation = request.POST.get('end_reservation')
-#         patient_id = request.POST.get('patient_id')
-#         room_id = request.POST.get('room_id')
-#         message = request.POST.get('message')
-#         month_start = request.GET.get('month_start')
-#         month_end = request.GET.get('month_end')
-#         if start_reservation and end_reservation and patient_id and room_id:
-#             room = Room.objects.get(id=room_id)
-#             patient = MyUser.objects.get(id=patient_id)
-
-#             if start_reservation > end_reservation:
-#                 start = request.POST.get('start')
-#                 end = request.POST.get('end')
-#                 patient_list = MyUser.objects.filter(status=3)
-
-#                 return render(
-#                     self.request,
-#                     'reservation_form.html',
-#                     context={
-#                         'room': room,
-#                         'start': start,
-#                         'end': end,
-#                         'patient_list': patient_list,
-#                         'month_start': month_start,
-#                         'month_end': month_end,
-#                         'message': 'Błądnie wpisana data'
-#                     }
-#                 )
-
-#             reservation_end = Reservation.objects.filter(
-#                 patient=patient, end_reservation__range=(start_reservation, end_reservation)
-#             )
-#             reservation_start = Reservation.objects.filter(
-#                 patient=patient, start_reservation__range=(start_reservation, end_reservation)
-#             )
-#             reservation_during = Reservation.objects.filter(
-#                 patient=patient, start_reservation__lte=start_reservation, end_reservation__gte=end_reservation
-#             )
-
-#             if reservation_end or reservation_start or reservation_during:
-#                 start = request.POST.get('start')
-#                 end = request.POST.get('end')
-#                 patient_list = MyUser.objects.filter(status=3)
-
-#                 return render(
-#                     self.request,
-#                     'reservation_form.html',
-#                     context={
-#                         'room': room,
-#                         'start': start,
-#                         'end': end,
-#                         'patient_list': patient_list,
-#                         'month_start': month_start,
-#                         'month_end': month_end,
-#                         'message': 'Pacjent ma już zarezerwowany pobyt w tym terminie'
-#                     }
-#                 )
-
-#             reservation = Reservation.objects.create(
-#                 patient=patient,
-#                 room=room,
-#                 start_reservation=start_reservation,
-#                 end_reservation=end_reservation,
-#                 message=message
-#             )
-
-#             return redirect('../reservation/?month_look=0')
+        return super().form_valid(form)
 
 
 # class ReservationEditView(LoginRequiredMixin, UserPassesTestMixin, View):
@@ -598,18 +589,24 @@ class UserPasswordView(LoginRequiredMixin, View):
 #         return redirect('/reservation/?month_look=0')
 
 
-# class ReservationDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-#     """
-#     Return the delete reservation view
-#     Only for user with status admin
-#     """
-#     def test_func(self):
-#         return self.request.user.status == 1
+class ReservationDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    """
+    Return the delete reservation view
+    Only for user with status admin
+    """
+    model = Reservation
+    template_name = 'reservation_delete.html'
+    
+    def test_func(self):
 
-#     permission_required = 'project_app.delete_reservation'
-#     model = Reservation
-#     template_name = 'reservation_delete.html'
-#     success_url = '/reservation/?month_look=0'
+        return self.request.user.status == 1
+
+    def get_success_url(self):
+    
+        selected_month = self.request.GET.get('selected_month')
+        
+        return f'{reverse("reservation")}?month_look={selected_month}'
+
 
 
 # @method_decorator(csrf_exempt, name='dispatch')

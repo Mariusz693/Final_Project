@@ -83,7 +83,7 @@
                             {% endif %}
                         </td>
                         <td scope="row" class="col-1 d-flex align-items-center justify-content-center flex-wrap">
-                            <a class="btn btn-outline-danger my-table-button" href="{% url 'user-delete' pk=user.id %}">Usuń</a>
+                            <a class="btn btn-outline-danger my-table-button" href="{% url 'user-delete' %}?user_id={{user.id}}">Usuń</a>
                         </td>
                     </tr>
                 {% empty %}

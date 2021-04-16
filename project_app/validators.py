@@ -11,8 +11,8 @@ def validate_tel_number(tel_number):
 
 def validate_password(password):
 
-    if len(password) < 7:
-        return ('Hasło za krótkie')
+    if len(password) < 8:
+        return ('Hasło za krótkie, minimum 8 znaków')
 
     contains_lower_char = False
     contains_upper_char = False

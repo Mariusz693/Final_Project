@@ -118,3 +118,13 @@ table.my-table-border td.my-free-element {
 table.my-table-border th.my-call-border {
     border: 1.5px solid black;
 }
+
+table th.my-table-user-reservation {
+    text-align: center;
+    vertical-align: middle;
+}
+
+table td.my-table-user-reservation {
+    text-align: center;
+    vertical-align: middle;
+}

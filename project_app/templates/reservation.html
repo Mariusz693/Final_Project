@@ -64,14 +64,13 @@
                                        aria-expanded="false">{{ item.2.patient.last_name }}</a>
                                 <div class="dropdown-menu">
                                     <span class="dropdown-item"><b>{{ item.2.patient }}</b></span>
-                                    <span class="dropdown-item"><b>Od {{ item.2.start_reservation|date:"Y-m-d" }}
-                                        do {{ item.2.end_reservation|date:"Y-m-d" }}</b></span>
+                                    <span class="dropdown-item"><b>Od {{ item.2.start_date|date:"Y-m-d" }} do {{ item.2.end_date|date:"Y-m-d" }}</b></span>
                                     <a class="dropdown-item"
-                                       href="{% url 'reservation-edit' id_reservation=item.2.id %}">Edytuj</a>
+                                       href="{% url 'reservation-update' pk=item.2.id %}?start={{ item.3|date:'Y-m-d' }}&end={{ item.4|date:'Y-m-d' }}&selected_month={{ selected_date|date:'Y-m'}}">Edytuj</a>
                                     <a class="dropdown-item"
                                        href="{% url 'reservation-delete' pk=item.2.id %}?selected_month={{ selected_date|date:'Y-m'}}">Usuń</a>
                                     <a class="dropdown-item"
-                                       href="{% url 'reservation-patient' id_user=item.2.patient.id %}">Wszystkie</a>
+                                       href="{% url 'user-reservation' pk=item.2.patient.id %}">Wszystkie</a>
                                 </div>
                             </td>
                         {% else %}

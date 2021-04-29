@@ -15,23 +15,23 @@
                 <tbody>
                     <tr class="d-flex">
                         <th scope="col" class="col-3">Pacjent</th>
-                        <td class="col">{{ reservation.patient }}</td>
+                        <td class="col">{{ object.patient }}</td>
                     </tr>
                     <tr class="d-flex">
                         <th scope="col" class="col-3">Data rozpoczęcia</th>
-                        <td class="col">{{ reservation.start_reservation|date:"j E Y" }}</td>
+                        <td class="col">{{ object.start_date|date:"j E Y" }}</td>
                     </tr>
                     <tr class="d-flex">
                         <th scope="col" class="col-3">Data zakończenia</th>
-                        <td class="col">{{ reservation.end_reservation|date:"j E Y" }}</td>
+                        <td class="col">{{ object.end_date|date:"j E Y" }}</td>
                     </tr>
                     <tr class="d-flex">
                         <th scope="col" class="col-3">Nr pokoju:</th>
-                        <td class="col">{{ reservation.room.room_number }}</td>
+                        <td class="col">{{ object.room }}</td>
                     </tr>
                     <tr class="d-flex">
                         <th scope="col" class="col-3">Wiadomość:</th>
-                        <td class="col">{{ reservation.message }}</td>
+                        <td class="col">{{ object.message }}</td>
                     </tr>
                 </tbody>
             </table>

@@ -3,47 +3,45 @@
 {% block content %}
     <div class="container my-container">
         <div class="row">
-            {% if messages %}
-            {% for message in messages %}
-            <div class="col" style="color: red;">
-                <h3>{{ message }}</h3>
-            </div>
-            {% endfor %}
-            {% else %}
             <div class="col">
                 <h3>Potwierdź usunięcie profilu</h3>
             </div>
-            {% endif %}
         </div>
         <table class="table">
             <thead>
                 <tr class="d-flex">
                     <th scope="col" class="col-3">Status:</th>
-                    <td class="col">{{ user.get_status_display }}</td>
+                    <td class="col">{{ object.get_status_display }}</td>
                 </tr>
             </thead>
             <tbody>
                 <tr class="d-flex">
                     <th scope="col" class="col-3">Imię:</th>
-                    <td class="col">{{ user.first_name }}</td>
+                    <td class="col">{{ object.first_name }}</td>
                 </tr>
                 <tr class="d-flex">
                     <th scope="col" class="col-3">Nazwisko:</th>
-                    <td class="col">{{ user.last_name }}</td>
+                    <td class="col">{{ object.last_name }}</td>
                 </tr>
                 <tr class="d-flex">
                     <th scope="col" class="col-3">Email:</th>
-                    <td class="col">{{ user.email }}</td>
+                    <td class="col">{{ object.email }}</td>
                 </tr>
                 <tr class="d-flex">
                     <th scope="col" class="col-3">Numer telefonu:</th>
-                    <td class="col">{{ user.phone }}</td>
+                    <td class="col">{{ object.phone }}</td>
                 </tr>
             </tbody>
         </table>
         <form class="form-control" action="" method="POST">
             {%  csrf_token %}
-            {{ form.as_p }}
+            {% if error %}
+                <div class="row my-form-row">
+                    <div class="col" style="color: #CC0000;">
+                        <p><strong>{{ error }}</strong></p>
+                    </div>
+                </div>
+            {% endif %}
             <div class="row my-form-row">
                 <div class="col">
                     <input type="submit" class="btn btn-success" value="Potwierdź">

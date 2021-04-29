@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %} User Reservations {% endblock %}
+{% block content %}
+    <div class="container my-container">
+        <div class="row">
+            <h3><b>Rezerwacje: {{ patient }}</b></h3>
+        </div>
+        {% if reservation %}
+            <table class="table">
+                <thead>
+                    <tr class="d-flex flex-wrap">
+                        <th scope="row" class="col-1 my-table-user-reservation">Nr pokoju:</th>
+                        <th scope="row" class="col-2 my-table-user-reservation">Data rozpoczęcia:</th>
+                        <th scope="row" class="col-2 my-table-user-reservation">Data zakończenia:</th>
+                        <th scope="row" class="col-7">Wiadomość:</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="d-flex flex-wrap">
+                        <td class="col-1 my-table-user-reservation">{{ reservation.room }}</td>
+                        <td class="col-2 my-table-user-reservation">{{ reservation.start_date|date:"j E Y" }}</td>
+                        <td class="col-2 my-table-user-reservation">{{ reservation.end_date|date:"j E Y" }}</td>
+                        <td class="col-7">{{ reservation.message }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        {% endif %}
+        <div class="row">
+            <div class="col">
+                {% if search == 'next' %}
+                <a href="{% url 'user-reservation' pk=patient.id %}?search=next" class="btn btn-outline-success">Zaplanowane</a>
+                <a href="{% url 'user-reservation' pk=patient.id %}?search=prev" class="btn btn-success">Zakończone</a>
+                {% else %}
+                <a href="{% url 'user-reservation' pk=patient.id %}?search=next" class="btn btn-success">Zaplanowane</a>
+                <a href="{% url 'user-reservation' pk=patient.id %}?search=prev" class="btn btn-outline-success">Zakończone</a>
+                {% endif %}
+            </div>
+        </div>
+        <table class="table">
+            <thead>
+                <tr class="d-flex flex-wrap">
+                    <th scope="row" class="col-1 my-table-user-reservation">Nr pokoju:</th>
+                    <th scope="row" class="col-2 my-table-user-reservation">Data rozpoczęcia:</th>
+                    <th scope="row" class="col-2 my-table-user-reservation">Data zakończenia:</th>
+                    <th scope="row" class="col-7">Wiadomość:</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reservation in object_list %}
+                    <tr class="d-flex flex-wrap">
+                        <td class="col-1 my-table-user-reservation">{{ reservation.room }}</td>
+                        <td class="col-2 my-table-user-reservation">{{ reservation.start_date|date:"j E Y" }}</td>
+                        <td class="col-2 my-table-user-reservation">{{ reservation.end_date|date:"j E Y" }}</td>
+                        <td class="col-7">{{ reservation.message }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            {% if search == 'prev' %}
+                                Brak zakończonych terminów
+                            {% else %}
+                                Brak zaplanowanych terminów
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if is_paginated %}
+            <div>
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.number|add:'-2' > 1 %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.number|add:'-5' }}&search={{ search }}">&hellip;</a>
+                        </li>
+                    {% endif %}
+                    {% if page_obj.paginator.num_pages <= 1 %}
+                        {{ pass }}
+                    {% else %}
+                        {% for i in page_obj.paginator.page_range %}
+                            {% if page_obj.number == i %}
+                                <li class="page-item active" aria-current="page">
+                                    <span class="page-link">{{ i }}</span>
+                                </li>
+                            {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+                                <li class="page-item"><a class="page-link" href="?page={{ i }}&search={{ search }}">{{ i }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                    {% if page_obj.paginator.num_pages > page_obj.number|add:'2' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.number|add:'5' }}&search={{ search }}">&hellip;</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

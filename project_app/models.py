@@ -1,7 +1,10 @@
 import uuid
 
 from django.db import models
+from django.db.models import Q
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
+from django.contrib.postgres.fields import DateRangeField
 
 from .managers import CustomUserManager
 from .validators import validate_tel_number
@@ -35,23 +38,63 @@ class User(AbstractUser):
     def __str__(self):
         return self.first_name + ' ' + self.last_name
 
+    def delete(self, *args, **kwargs):
+        
+        if self.status == 1 and self.__class__._default_manager.filter(status=1).count() < 2:
+        
+            raise ValidationError('Nie można usunąć ostatniego administratora !!!')
 
+        super().delete(*args, **kwargs)
+
+        
 class Room(models.Model):
     
     room_number = models.SmallIntegerField(unique=True)
 
     def __str__(self):
-        return f'Pokój nr {self.room_number}'
+        return str(self.room_number)
 
 
 class Reservation(models.Model):
     
     room = models.ForeignKey(Room, verbose_name='Pokój', on_delete=models.CASCADE)
-    start_reservation = models.DateField(verbose_name='Data rozpoczęcia')
-    end_reservation = models.DateField(verbose_name='Data zakończenia')
-    message = models.TextField(verbose_name='Wiadomość', null=True)
-    patient = models.ForeignKey(User, verbose_name='Pacjent', on_delete=models.CASCADE)
+    start_date = models.DateField(verbose_name='Data rozpoczęcia')
+    end_date = models.DateField(verbose_name='Data zakończenia')
+    message = models.TextField(verbose_name='Wiadomość', blank=True)
+    patient = models.ForeignKey(User, limit_choices_to={'status': 3}, verbose_name='Pacjent', on_delete=models.CASCADE)
+    duration = DateRangeField()
 
+    def save(self, *args, **kwargs):
+
+        self.duration = [self.start_date, self.end_date]
+        
+        super().save(*args, **kwargs)
+
+    def validate_unique(self, *args, **kwargs):
+        
+        super().validate_unique(*args, **kwargs)
+
+        if self.end_date <= self.start_date:
+            raise ValidationError({NON_FIELD_ERRORS: 'Data zakończenia musi być poźniej od daty rozpoczęcia'})
+
+        if self._state.adding:
+            reservation_room = self.__class__._default_manager.filter(
+                Q(room=self.room, end_date__range=(self.start_date, self.end_date))
+                |Q(room=self.room, start_date__range=(self.start_date, self.end_date))
+                |Q(room=self.room, start_date__lte=self.start_date, end_date__gte=self.end_date)
+            ).first()
+
+            if reservation_room:
+                raise ValidationError({NON_FIELD_ERRORS: 'Pokój jest już zarezerwowany w tym terminie, sprawdź terminarz'})
+        else:
+            reservation_room = self.__class__._default_manager.filter(
+                Q(room=self.room, end_date__range=(self.start_date, self.duration.lower))
+                |Q(room=self.room, start_date__range=(self.duration.upper, self.end_date))
+            ).first()
+
+            if reservation_room:                
+                raise ValidationError({NON_FIELD_ERRORS: 'Pokój jest już zarezerwowany w tym terminie, sprawdź terminarz'})
+        
 
 class Timetable(models.Model):
     

@@ -32,7 +32,7 @@
                                     <div class="dropdown-divider"></div>
                                     <a class="dropdown-item" href="{% url 'reservation' %}?month_look={{ context_day|date:'Y-m' }}">Terminarz</a>
                                     <a class="dropdown-item" href="{% url 'timetable' %}?day_look=0">Grafik</a>
-                                    <a class="dropdown-item" href="{% url 'patient-list' %}?sorted=0">Pacjenci</a>
+                                    <a class="dropdown-item" href="{% url 'patient-list' %}">Pacjenci</a>
                                     <a class="dropdown-item" href="{% url 'employee-list' %}">Rehabilitanci</a>
                                     <div class="dropdown-divider"></div>
                                     <a class="dropdown-item" href="{% url 'user-add' %}">Dodaj osobę</a>
@@ -52,7 +52,7 @@
                                     <div class="dropdown-divider"></div>
                                     <a class="dropdown-item" href="{% url 'timetable-user' id_user=request.user.id %}?week_look=0">Mój grafik</a>
                                     {% if request.user.status == 3 %}
-                                        <a class="dropdown-item" href="{% url 'reservation-patient' id_user=request.user.id %}">Rezerwacje</a>
+                                        <a class="dropdown-item" href="{% url 'user-reservation' pk=request.user.id %}">Rezerwacje</a>
                                     {% endif %}
                                 </div>
                             </li>

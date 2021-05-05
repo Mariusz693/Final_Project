@@ -1,50 +1,49 @@
 {% extends 'base.html' %}
 {% block title %} Reservation Delete {% endblock %}
 {% block content %}
-    <div class="container my-container">
-        <div class="row">
+    <div class="container my-div-container">
+        <div class="row my-div-header">
             <div class="col">
-                <h3>Potwierdź usunięcie</h3>
+                <h4>Potwierdź usunięcie rezerwacji</h4>
             </div>
-            <table class="table">
-                <thead>
-                    <tr class="d-flex">
-                        <th scope="col" class="col-12">Rezerwacja</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="d-flex">
-                        <th scope="col" class="col-3">Pacjent</th>
-                        <td class="col">{{ object.patient }}</td>
-                    </tr>
-                    <tr class="d-flex">
-                        <th scope="col" class="col-3">Data rozpoczęcia</th>
-                        <td class="col">{{ object.start_date|date:"j E Y" }}</td>
-                    </tr>
-                    <tr class="d-flex">
-                        <th scope="col" class="col-3">Data zakończenia</th>
-                        <td class="col">{{ object.end_date|date:"j E Y" }}</td>
-                    </tr>
-                    <tr class="d-flex">
-                        <th scope="col" class="col-3">Nr pokoju:</th>
-                        <td class="col">{{ object.room }}</td>
-                    </tr>
-                    <tr class="d-flex">
-                        <th scope="col" class="col-3">Wiadomość:</th>
-                        <td class="col">{{ object.message }}</td>
-                    </tr>
-                </tbody>
-            </table>
         </div>
         <form class="form-control" action="" method="POST">
             {%  csrf_token %}
             {{ form.as_p }}
-            <div class="row my-form-row">
+            <div class="row my-form-div-row">
+                <div class="col">
+                    <table class="table">
+                        <tbody>
+                            <tr class="d-flex">
+                                <th scope="col" class="col-3">Pacjent</th>
+                                <td class="col">{{ object.patient }}</td>
+                            </tr>
+                            <tr class="d-flex">
+                                <th scope="col" class="col-3">Data rozpoczęcia</th>
+                                <td class="col">{{ object.start_date|date:"j E Y" }}</td>
+                            </tr>
+                            <tr class="d-flex">
+                                <th scope="col" class="col-3">Data zakończenia</th>
+                                <td class="col">{{ object.end_date|date:"j E Y" }}</td>
+                            </tr>
+                            <tr class="d-flex">
+                                <th scope="col" class="col-3">Nr pokoju:</th>
+                                <td class="col">{{ object.room }}</td>
+                            </tr>
+                            <tr class="d-flex">
+                                <th scope="col" class="col-3">Notatka:</th>
+                                <td class="col">{{ object.message }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="row my-form-div-row">
                 <div class="col">
                     <input type="submit" class="btn btn-success" value="Potwierdź">
                 </div>
                 <div class="col d-flex justify-content-end">
-                    <a class="btn btn-danger" href="{% url 'reservation' %}?month_look={{ request.GET.selected_month }}">Anuluj</a>
+                    <a class="btn btn-danger" href="{{ request.GET.next }}">Anuluj</a>
                 </div>
             </div>
         </form>

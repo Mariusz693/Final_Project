@@ -1,40 +1,53 @@
 {% extends 'base.html' %}
 {% block title %} User Details {% endblock %}
 {% block content %}
-    <div class="container my-container">
-        <div class="row">
-            <h3>Szczegóły profilu</h3>
+    <div class="container my-div-container">
+        <div class="row my-div-header">
+            <div class="col">
+                <h4>Szczegóły profilu</h4>    
+            </div>
         </div>
-        <table class="table">
-            <thead>
-                <tr class="d-flex">
-                    <th scope="col" class="col-3">Status:</th>
-                    <td class="col">{{ object.get_status_display }}</td>
-                </tr>
-            </thead>
-            <tbody>
-                <tr class="d-flex">
-                    <th scope="col" class="col-3">Imię:</th>
-                    <td class="col">{{ object.first_name }}</td>
-                </tr>
-                <tr class="d-flex">
-                    <th scope="col" class="col-3">Nazwisko:</th>
-                    <td class="col">{{ object.last_name }}</td>
-                </tr>
-                <tr class="d-flex">
-                    <th scope="col" class="col-3">Email:</th>
-                    <td class="col">{{ object.email }}</td>
-                </tr>
-                <tr class="d-flex">
-                    <th scope="col" class="col-3">Numer telefonu:</th>
-                    <td class="col">{{ object.phone }}</td>
-                </tr>
-            </tbody>
-        </table>
-        <div>
-            <a class="btn btn-info" href="{% url 'user-update' %}">Edytuj dane</a>
-            <a class="btn btn-info" href="{% url 'user-password-update' %}">Zmień hasło</a>
-            <a class="btn btn-danger" href="{% url 'user-delete' %}">Usuń profil</a>
+        <div class="form-control">
+            <div class="row my-form-div-row">
+                <div class="col">
+                    <table class="table">
+                        <tbody>
+                            <tr class="d-flex">
+                                <th scope="col" class="col-3">Status:</th>
+                                <td class="col">{{ object.get_status_display }}</td>
+                            </tr>
+                            <tr class="d-flex">
+                                <th scope="col" class="col-3">Imię:</th>
+                                <td class="col">{{ object.first_name }}</td>
+                            </tr>
+                            <tr class="d-flex">
+                                <th scope="col" class="col-3">Nazwisko:</th>
+                                <td class="col">{{ object.last_name }}</td>
+                            </tr>
+                            <tr class="d-flex">
+                                <th scope="col" class="col-3">Email:</th>
+                                <td class="col">{{ object.email }}</td>
+                            </tr>
+                            <tr class="d-flex">
+                                <th scope="col" class="col-3">Numer telefonu:</th>
+                                <td class="col">{{ object.phone }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="row my-form-div-row">
+                <div class="col-2">
+                    <a class="btn btn-info" href="{% url 'user-update' %}">Edytuj dane</a>
+                </div>
+                <div class="col-2">
+                    <a class="btn btn-info" href="{% url 'user-password-update' %}">Zmień hasło</a>
+                </div>
+                <div class="col d-flex justify-content-end">
+                    <a class="btn btn-danger" href="{% url 'user-delete' %}">Usuń profil</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}

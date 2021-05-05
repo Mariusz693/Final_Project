@@ -2,30 +2,30 @@
 {% load crispy_forms_tags %}
 {% block title %} Login {% endblock %}
 {% block content %}
-    <div class="container my-container">
-        <div class="row">
+    <div class="container my-div-container">
+        <div class="row my-div-header">
             <div class="col">
-                <h3>Logowanie</h3>
+                <h4>Logowanie</h4>
             </div>
         </div>
         <form class="form-control" action="" method="POST">
             {% csrf_token %}
-            <div class="row my-form-row">
+            <div class="row my-form-div-row">
                 <div class="col-6">
                     {{ form.email|as_crispy_field }}
                 </div>
             </div>
-            <div class="row my-form-row">
+            <div class="row my-form-div-row">
                 <div class="col-6">
                     {{ form.password|as_crispy_field }}
                 </div>
             </div>
-            <div class="row my-form-row">
+            <div class="row my-form-div-row">
                 <div class="col-6">
                     <a href="{% url 'user-password-reset' %}">Zapomniałem hasło</a>
                 </div>
             </div>
-            <div class="row my-form-row">
+            <div class="row my-form-div-row">
                 <div class="col">
                     <input type="submit" class="btn btn-success" value="Zaloguj">
                 </div>

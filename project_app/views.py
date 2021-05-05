@@ -16,9 +16,9 @@ from django.contrib import messages
 from django.contrib.auth import authenticate
 
 from .models import User, Room, Reservation, Timetable, UserUniqueToken, HOUR_CHOICES, ValidationError
-from .forms import UserLoginForm, UserPasswordUpdateForm, UserPasswordSetForm, UserPasswordResetForm, ReservationAddForm, ReservationUpdateForm
-from .function import generate_list, generate_month, generate_week_timetable, change_day_to_date, set_day_look, \
-     generate_week_user
+from .forms import UserLoginForm, UserPasswordUpdateForm, UserPasswordSetForm, UserPasswordResetForm, ReservationAddForm, \
+     ReservationUpdateForm, TimetableForm
+from .function import generate_list, generate_month, generate_week_timetable, change_day_to_date, set_day_look
 
 
 class IndexView(View):
@@ -44,7 +44,7 @@ class UserLoginView(FormView):
     	
         if self.request.GET.get('next'):
 
-            return str(self.request.GET.get('next'))
+            return self.request.GET.get('next')
 
         return reverse_lazy('index')
 
@@ -78,7 +78,7 @@ class PatientListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     Only for user with status admin
     """
     template_name = 'user_list.html'
-    paginate_by = 1
+    paginate_by = 8
 
     def test_func(self):
 
@@ -90,7 +90,7 @@ class PatientListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         search = search if search else ''
         
         if search == 'actually_patient':
-            today_is = datetime.date.today()
+            today_is = set_day_look()
             reservations = Reservation.objects.filter(
                 start_date__lte=today_is,
                 end_date__gte=today_is
@@ -123,7 +123,7 @@ class EmployeeListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     Only for user with status admin
     """
     template_name = 'user_list.html'
-    paginate_by = 1
+    paginate_by = 8
 
     def test_func(self):
         
@@ -171,6 +171,17 @@ class UserCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
             success_url = reverse_lazy('index')
         
         return success_url
+    
+    def get_initial(self):
+
+        initial = super().get_initial()
+        status = self.request.GET.get('status')
+        
+        if status:
+            status = 2 if status == 'employee' else 3 
+            initial['status'] = status
+        
+        return initial
 
     def form_valid(self, form):
         
@@ -230,28 +241,21 @@ class UserDeleteView(LoginRequiredMixin, DeleteView):
             self.object = self.get_object()
             context = self.get_context_data(
                 object=self.object,
-                error=e.message
+                errors=e
             )
         
             return self.render_to_response(context)
  
     def get_success_url(self):
+    
+        next_url = self.request.GET.get('next')
         
-        self.object = self.get_object()
+        if next_url:  
 
-        if self.request.user.id != self.object:
-            
-            if self.object.status == 2:
-                success_url = reverse_lazy('employee-list')
-            
-            else:
-                success_url = reverse_lazy('patient-list') 
+            return next_url    
+    
+        return reverse_lazy('index')
         
-        else:
-            success_url = reverse_lazy('index')
-        
-        return success_url
-
 
 class UserUpdateView(LoginRequiredMixin, UpdateView):
     """
@@ -373,6 +377,9 @@ class ReservationView(LoginRequiredMixin, UserPassesTestMixin, View):
 
         month_list = generate_list()
         month_look = request.GET.get('month_look')
+        if not month_look:
+            today = datetime.date.today()
+            month_look = str(today)[:-3]
         selected_date = change_day_to_date(month_look)
         index_month = month_list.index(selected_date)
         change_month = [
@@ -384,8 +391,7 @@ class ReservationView(LoginRequiredMixin, UserPassesTestMixin, View):
         day_list = selected_month_list[2]
         month_day_start = day_list[0]
         month_day_end = day_list[-1]
-        max_date = month_list[-1]
-        min_date = month_list[0]
+        one_day = datetime.timedelta(days=1)
         rooms = Room.objects.all()
         for room in rooms:
             reservation_all = room.reservation_set.filter(
@@ -411,42 +417,21 @@ class ReservationView(LoginRequiredMixin, UserPassesTestMixin, View):
                         result_table.append([
                             False,
                             free_time,
-                            prev_reservation.end_date + datetime.timedelta(days=1) if prev_reservation else min_date,
-                            next_reservation.start_date - datetime.timedelta(days=1) if next_reservation else max_date
+                            prev_reservation.end_date + one_day if prev_reservation else None,
+                            next_reservation.start_date - one_day if next_reservation else None
                         ])
                         counter += free_time
                 if (end_date - month_day_end).days > 0:
                     end_date = month_day_end
                 during_reservation = (end_date - start_date).days + 1
-                prev_reservation_in_room = room.reservation_set.filter(end_date__lte=start_date).order_by('-end_date').first()
-                next_reservation_in_room = room.reservation_set.filter(start_date__gte=end_date).order_by('start_date').first()
-                prev_reservation_patient = Reservation.objects.filter(
-                    patient=reservation.patient,
-                    end_date__lte=reservation.start_date
-                    ).order_by('-end_date').first()
-                next_reservation_patient = Reservation.objects.filter(
-                    patient=reservation.patient,
-                    start_date__gte=reservation.end_date
-                    ).order_by('start_date').first()
-                prev_reservation_date = min_date
-                if prev_reservation_in_room:
-                    prev_reservation_date = prev_reservation_in_room.end_date + datetime.timedelta(days=1)
-                if prev_reservation_patient:
-                    if prev_reservation_patient.end_date > prev_reservation_date:
-                        prev_reservation_date = prev_reservation_patient.end_date + datetime.timedelta(days=1)
-                next_reservation_date = max_date
-                if next_reservation_in_room:
-                    next_reservation_date = next_reservation_in_room.start_date - datetime.timedelta(days=1)
-                if next_reservation_patient:
-                    if next_reservation_patient.start_date < next_reservation_date:
-                        next_reservation_date = next_reservation_patient.start_date - datetime.timedelta(days=1)
-                
                 result_table.append([
                     True, 
                     during_reservation, 
                     reservation,
-                    prev_reservation_date,
-                    next_reservation_date
+                    [
+                        True if reservation.start_date < month_day_start else False,
+                        True if reservation.end_date > month_day_end else False
+                    ]
                 ])
                 counter += during_reservation
             counter = 0
@@ -459,10 +444,10 @@ class ReservationView(LoginRequiredMixin, UserPassesTestMixin, View):
                 result_table.append([
                     False,
                     free_time,
-                    prev_reservation.end_date + datetime.timedelta(days=1) if prev_reservation else min_date,
-                    next_reservation.start_date - datetime.timedelta(days=1) if next_reservation else max_date
+                    prev_reservation.end_date + one_day if prev_reservation else None,
+                    next_reservation.start_date - one_day if next_reservation else None
                 ])
-            
+                
             room.reserve = result_table
 
         return render(
@@ -492,29 +477,18 @@ class ReservationAddView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         return self.request.user.status == 1
 
     def get_success_url(self):
+
+        next_url = self.request.GET.get('next')
+        
+        return next_url    
     
-        selected_month = self.request.GET.get('selected_month')
+    def get_form_kwargs(self, *args, **kwargs):
         
-        return f'{reverse("reservation")}?month_look={selected_month}'
-
-    def get_context_data(self, **kwargs):
+        kwargs = super().get_form_kwargs(*args, **kwargs)
+        kwargs['room'] = self.request.GET.get('room')
+        kwargs['date'] = self.request.GET.get('date')
         
-        context = super().get_context_data(**kwargs)
-        
-        start = self.request.GET.get('start')
-        end = self.request.GET.get('end')
-        month_start = self.request.GET.get('month_start')
-        month_end = self.request.GET.get('month_end')
-        room_id = self.request.GET.get('room')
-        context['form'].fields['room'].initial = room_id
-        context['form'].fields['start_date'].initial = month_start if month_start > start else start
-        context['form'].fields['end_date'].initial = month_end if month_end < end else end
-        context['form'].fields['start_date'].widget.attrs['min'] = start
-        context['form'].fields['start_date'].widget.attrs['max'] = end
-        context['form'].fields['end_date'].widget.attrs['min'] = start
-        context['form'].fields['end_date'].widget.attrs['max'] = end
-
-        return context
+        return kwargs
 
 
 class ReservationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -531,10 +505,10 @@ class ReservationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView)
         return self.request.user.status == 1
 
     def get_success_url(self):
-    
-        selected_month = self.request.GET.get('selected_month')
+
+        next_url = self.request.GET.get('next')
         
-        return f'{reverse("reservation")}?month_look={selected_month}'    
+        return next_url    
     
     def get_initial(self):
         
@@ -545,30 +519,17 @@ class ReservationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView)
         })
 
         return initial
-    
-    def get_context_data(self, **kwargs):
-        
-        context = super().get_context_data(**kwargs)
-     
-        start = self.request.GET.get('start')
-        end = self.request.GET.get('end')
-        context['form'].fields['start_date'].widget.attrs['min'] = start
-        context['form'].fields['start_date'].widget.attrs['max'] = end
-        context['form'].fields['end_date'].widget.attrs['min'] = start
-        context['form'].fields['end_date'].widget.attrs['max'] = end
-
-        return context
 
     def form_valid(self, form):
         
         reservation = form.save()
         
         timetables = reservation.timetable_set.filter(
-            Q(day_timetable__lte=reservation.start_date) | Q(day_timetable__gte=reservation.end_date)
+            Q(day_timetable__lt=reservation.start_date) | Q(day_timetable__gt=reservation.end_date)
         )
         if timetables:
             timetables.delete()
-# SPRAWDZ
+
         return super().form_valid(form)
 
 
@@ -585,138 +546,143 @@ class ReservationDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView)
         return self.request.user.status == 1
 
     def get_success_url(self):
-    
-        selected_month = self.request.GET.get('selected_month')
+
+        next_url = self.request.GET.get('next')
         
-        return f'{reverse("reservation")}?month_look={selected_month}'
+        return next_url    
 
 
+@method_decorator(csrf_exempt, name='dispatch')
+class TimetableView(LoginRequiredMixin, UserPassesTestMixin, View):
+    """
+    Return the view where user may add or delete timetable for patient currently in the middle
+    Only for user with status admin
+    """
+    def test_func(self):
+        return self.request.user.status == 1
 
-# # @method_decorator(csrf_exempt, name='dispatch')
-# # class TimetableView(LoginRequiredMixin, UserPassesTestMixin, View):
-# #     """
-# #     Return the view where user may add or delete timetable for patient currently in the middle
-# #     Only for user with status admin
-# #     """
-# #     def test_func(self):
-# #         return self.request.user.status == 1
+    def get(self, request):
 
-# #     def get(self, request):
+        month_list = generate_list()
+        day_look = request.GET.get('day_look')
+        day_look = set_day_look(day_look)
+        all_week = generate_week_timetable(day_look)
+        employee_list = User.objects.filter(status=2, is_active=True)
+        reservations = Reservation.objects.filter(start_date__lte=day_look, end_date__gte=day_look)
+        patient_list = []
+        for reservation in reservations:
+            patient = reservation.patient
+            patient.reservation_id = reservation.id
+            patient_list.append(patient)
+        timetables = Timetable.objects.filter(day_timetable=day_look)
+        patient_free_list = []
+        for patient in patient_list:
+            if patient not in [timetable.patient for timetable in timetables]:
+                patient_free_list.append(patient)
 
-# #         day_look = request.GET.get('day_look')
-# #         if day_look == '0':
-# #             day_look = set_day_look()
-# #         day_look_date = change_day_to_data(day_look)
-# #         all_week = generate_week_timetable(day_look_date)
-# #         employee_list = MyUser.objects.filter(status=2)
-# #         reservations = Reservation.objects.filter(
-# #             start_reservation__lte=day_look_date,
-# #             end_reservation__gte=day_look_date
-# #         )
-# #         patient_list = []
-# #         for reservation in reservations:
-# #             patient = reservation.patient
-# #             patient.reservation_id = reservation.id
-# #             patient_list.append(patient)
-# #         timetables = Timetable.objects.filter(day_timetable=day_look_date)
-# #         patient_free_list = []
-# #         for patient in patient_list:
-# #             if patient not in [timetable.patient for timetable in timetables]:
-# #                 patient_free_list.append(patient)
+        timetable_day = []
+        for i, employee in enumerate(employee_list):
+            timetable_day.append([employee, []])
+            for j in range(1, 4):
+                timetable_day[i][1].append(timetables.filter(employee=employee, hour_timetable=j).first())
 
-# #         timetable_day = []
-# #         for i, employee in enumerate(employee_list):
-# #             timetable_day.append([employee, []])
-# #             for j in range(1, 4):
-# #                 timetable_day[i][1].append(timetables.filter(employee=employee, hour_timetable=j).first())
+        return render(
+            request,
+            'timetable.html',
+            context={
+                'patient_free_list': patient_free_list,
+                'all_week': all_week,
+                'timetable_day': timetable_day,
+                'day_look': day_look,
+                'month_list': month_list
+            },
+        )
 
-# #         return render(
-# #             request,
-# #             'timetable.html',
-# #             context={
-# #                 'patient_free_list': patient_free_list,
-# #                 'all_week': all_week,
-# #                 'timetable_day': timetable_day,
-# #                 'day_look': day_look
-# #             },
-# #         )
+    def post(self, request):
 
-# #     def post(self, request):
+        data = json.loads(request.body.decode())
+        form = TimetableForm(data)
+        print(data)
+        if form.is_valid():
+            print('jestem')
+            timetable, _ = Timetable.objects.update_or_create(
+                patient=form.cleaned_data['patient'], day_timetable=form.cleaned_data['day_timetable'],
+                defaults={
+                    'patient': form.cleaned_data['patient'],
+                    'employee': form.cleaned_data['employee'],
+                    'day_timetable': form.cleaned_data['day_timetable'],
+                    'hour_timetable': form.cleaned_data['hour_timetable'],
+                    'reservation': form.cleaned_data['reservation']
+                }
+            )
+        
+            return HttpResponse(timetable.id)
 
-# #         data = json.loads(request.body.decode())
-# #         employee_id = int(data['employee_id'])
-# #         patient_id = int(data['patient_id'])
-# #         reservation_id = int(data['reservation_id'])
-# #         hour = int(data['hour'])
-# #         date = data['date']
-# #         employee = MyUser.objects.get(id=employee_id)
-# #         patient = MyUser.objects.get(id=patient_id)
-# #         reservation = Reservation.objects.get(id=reservation_id)
-# #         timetable, created = Timetable.objects.update_or_create(
-# #             patient=patient, day_timetable=date,
-# #             defaults={
-# #                 'patient': patient,
-# #                 'employee': employee,
-# #                 'day_timetable': date,
-# #                 'hour_timetable': hour,
-# #                 'reservation': reservation
-# #             }
-# #         )
+        return HttpResponse('')
 
-# #         return HttpResponse(timetable.id)
+    def delete(self, request):
 
-# #     def delete(self, request):
+        data = json.loads(request.body.decode())
+        timetable = int(data['timetable'])
 
-# #         data = json.loads(request.body.decode())
-# #         timetable_id = data['timetable_id']
-# #         timetable = Timetable.objects.get(id=timetable_id)
-# #         timetable.delete()
+        try:
+            timetable = Timetable.objects.get(id=timetable)
+            timetable.delete()
 
-# #         return HttpResponse('OK')
+            return HttpResponse('OK')
 
+        except Exception:
 
-# # class TimetableUserView(LoginRequiredMixin, View):
-# #     """
-# #     Return view of the timetable for current user (patient or employee)
-# #     All user
-# #     """
-# #     def get(self, request, id_my_user):
+            return HttpResponse('')
+        
 
-# #         if request.user.status != 1 and request.user.id != id_my_user:
-# #             return redirect('index')
+class UserTimetableView(LoginRequiredMixin, UserPassesTestMixin, View):
+    """
+    Return view of the timetable for current user (patient or employee)
+    All user
+    """
+    def test_func(self):
+        
+        return self.request.user.status == 1 or self.kwargs['pk'] == self.request.user.id
+    
+    def get(self, request, pk):
 
-# #         my_user = MyUser.objects.get(id=id_my_user)
-
-# #         week_look = request.GET.get('week_look')
-# #         if week_look == '0':
-# #             week_look = set_day_look()
-# #         week_look_data = change_day_to_data(week_look)
-# #         all_week = generate_week_user(week_look_data)
-# #         timetable_week = [[hour[1]] for hour in HOUR_CHOICES]
-# #         for i in range(3):
-# #             for j in range(5):
-# #                 item = None
-# #                 if my_user.status == 3:
-# #                     timetable = Timetable.objects.filter(patient=my_user, day_timetable=all_week[1][j],
-# #                                                          hour_timetable=i+1).first()
-# #                     if timetable:
-#                         item = timetable.employee
-#                 elif my_user.status == 2:
-#                     timetable = Timetable.objects.filter(employee=my_user, day_timetable=all_week[1][j],
-#                                                          hour_timetable=i + 1).first()
-#                     if timetable:
-#                         item = timetable.patient
-#                 timetable_week[i].append(item)
-
-#         return render(
-#             request,
-#             'timetable_user.html',
-#             context={
-#                 'my_user': my_user,
-#                 'all_week': all_week,
-#                 'timetable_week': timetable_week,
-#             }
-#         )
+        month_list = generate_list()
+        user = get_object_or_404(User, id=pk)
+        week_look = request.GET.get('week_look')
+        week_look = set_day_look(week_look)
+        all_week = generate_week_timetable(week_look)
+        timetable_week = [[hour[1]] for hour in HOUR_CHOICES]
+        
+        for i in range(3):
+        
+            for j in range(5):
+                item = None
+        
+                if user.status == 3:
+                    timetable = Timetable.objects.filter(patient=user, day_timetable=all_week[0][j],
+                                                         hour_timetable=i+1).first()
+                    if timetable:
+                        item = timetable.employee
+        
+                elif user.status == 2:
+                    timetable = Timetable.objects.filter(employee=user, day_timetable=all_week[0][j],
+                                                         hour_timetable=i+1).first()
+                    if timetable:
+                        item = timetable.patient
+        
+                timetable_week[i].append(item)
+        
+        return render(
+            request,
+            'user_timetable.html',
+            context={
+                'user': user,
+                'all_week': all_week,
+                'timetable_week': timetable_week,
+                'month_list': month_list
+            }
+        )
 
 
 class UserReservationView(LoginRequiredMixin, UserPassesTestMixin, ListView):
@@ -738,7 +704,7 @@ class UserReservationView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         self.today = datetime.date.today()
         
         if self.search == 'prev':
-            object_list = Reservation.objects.filter(patient=self.patient, end_date__lte=self.today).order_by('start_date')
+            object_list = Reservation.objects.filter(patient=self.patient, end_date__lte=self.today).order_by('-end_date')
         else:
             object_list = Reservation.objects.filter(patient=self.patient, start_date__gte=self.today).order_by('start_date')
         

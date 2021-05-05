@@ -1,48 +1,52 @@
 {% extends 'base.html' %}
 {% block title %} User Delete {% endblock %}
 {% block content %}
-    <div class="container my-container">
-        <div class="row">
+    <div class="container my-div-container">
+        <div class="row my-div-header">
             <div class="col">
-                <h3>Potwierdź usunięcie profilu</h3>
+                <h4>Potwierdź usunięcie profilu</h4>
             </div>
         </div>
-        <table class="table">
-            <thead>
-                <tr class="d-flex">
-                    <th scope="col" class="col-3">Status:</th>
-                    <td class="col">{{ object.get_status_display }}</td>
-                </tr>
-            </thead>
-            <tbody>
-                <tr class="d-flex">
-                    <th scope="col" class="col-3">Imię:</th>
-                    <td class="col">{{ object.first_name }}</td>
-                </tr>
-                <tr class="d-flex">
-                    <th scope="col" class="col-3">Nazwisko:</th>
-                    <td class="col">{{ object.last_name }}</td>
-                </tr>
-                <tr class="d-flex">
-                    <th scope="col" class="col-3">Email:</th>
-                    <td class="col">{{ object.email }}</td>
-                </tr>
-                <tr class="d-flex">
-                    <th scope="col" class="col-3">Numer telefonu:</th>
-                    <td class="col">{{ object.phone }}</td>
-                </tr>
-            </tbody>
-        </table>
         <form class="form-control" action="" method="POST">
             {%  csrf_token %}
-            {% if error %}
-                <div class="row my-form-row">
-                    <div class="col" style="color: #CC0000;">
-                        <p><strong>{{ error }}</strong></p>
+            {% if errors %}
+                {% for error in errors %}
+                    <div class="row my-form-div-row">
+                        <div class="col my-form-div-error">
+                            <p><strong>{{ error }}</strong></p>
+                        </div>
                     </div>
-                </div>
+                {% endfor %}
             {% endif %}
-            <div class="row my-form-row">
+            <div class="row my-form-div-row">
+                <div class="col">
+                    <table class="table">
+                        <tbody>
+                            <tr class="d-flex">
+                                <th scope="col" class="col-3">Status:</th>
+                                <td class="col">{{ object.get_status_display }}</td>
+                            </tr>
+                            <tr class="d-flex">
+                                <th scope="col" class="col-3">Imię:</th>
+                                <td class="col">{{ object.first_name }}</td>
+                            </tr>
+                            <tr class="d-flex">
+                                <th scope="col" class="col-3">Nazwisko:</th>
+                                <td class="col">{{ object.last_name }}</td>
+                            </tr>
+                            <tr class="d-flex">
+                                <th scope="col" class="col-3">Email:</th>
+                                <td class="col">{{ object.email }}</td>
+                            </tr>
+                            <tr class="d-flex">
+                                <th scope="col" class="col-3">Numer telefonu:</th>
+                                <td class="col">{{ object.phone }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="row my-form-div-row">
                 <div class="col">
                     <input type="submit" class="btn btn-success" value="Potwierdź">
                 </div>

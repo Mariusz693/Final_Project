@@ -4,7 +4,8 @@ from django.contrib.auth import authenticate
 from django.db.models import Q
 from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
 from .validators import validate_password
-from .models import User, Reservation, HOUR_CHOICES, STATUS_CHOICE, Room
+from .models import User, Reservation, HOUR_CHOICES, STATUS_CHOICE, Room, Timetable
+from .function import change_day_to_date
 
 
 class DateInput(forms.DateInput):
@@ -114,7 +115,31 @@ class ReservationAddForm(forms.ModelForm):
             'room': forms.HiddenInput(),
             'start_date': DateInput(),
             'end_date': DateInput(),
+            'message': forms.Textarea(attrs={'rows':4}),
         }
+
+    def __init__(self, *args, **kwargs):
+        
+        room = kwargs.pop('room')
+        date = kwargs.pop('date')
+
+        super().__init__(*args, **kwargs)
+        self.fields['start_date'].initial = date
+        self.fields['end_date'].initial = date
+        self.fields['room'].initial = room
+        room = Room.objects.get(id=room)
+        date = change_day_to_date(date)
+        prev_reservation = Reservation.objects.filter(room=room, end_date__lt=date).order_by('-end_date').first()
+        next_reservation = Reservation.objects.filter(room=room, start_date__gt=date).order_by('start_date').first()
+        one_day = datetime.timedelta(days=1)
+        
+        if prev_reservation:
+            self.fields['start_date'].widget.attrs['min'] = prev_reservation.end_date + one_day
+            self.fields['end_date'].widget.attrs['min'] = prev_reservation.end_date + one_day
+            
+        if next_reservation:
+            self.fields['start_date'].widget.attrs['max'] = next_reservation.start_date - one_day
+            self.fields['end_date'].widget.attrs['max'] = next_reservation.start_date - one_day
 
     def clean(self):
         
@@ -153,7 +178,30 @@ class ReservationUpdateForm(forms.ModelForm):
         widgets = {
             'start_date': DateInput(),
             'end_date': DateInput(),
+            'message': forms.Textarea(attrs={'rows':4}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        
+        super().__init__(*args, **kwargs)
+        
+        prev_reservation = Reservation.objects.filter(
+            Q (room=self.instance.room, end_date__lt=self.instance.start_date) 
+            | Q (patient=self.instance.patient, end_date__lt=self.instance.start_date)
+        ).order_by('-end_date').first()
+        next_reservation = Reservation.objects.filter(
+            Q (room=self.instance.room, start_date__gt=self.instance.end_date) 
+            | Q (patient=self.instance.patient, start_date__gt=self.instance.end_date)
+        ).order_by('start_date').first()
+        one_day = datetime.timedelta(days=1)
+
+        if prev_reservation:
+            self.fields['start_date'].widget.attrs['min'] = prev_reservation.end_date + one_day
+            self.fields['end_date'].widget.attrs['min'] = prev_reservation.end_date + one_day
+        
+        if next_reservation:
+            self.fields['start_date'].widget.attrs['max'] = next_reservation.start_date - one_day
+            self.fields['end_date'].widget.attrs['max'] = next_reservation.start_date - one_day
 
     def clean(self):
         
@@ -162,14 +210,13 @@ class ReservationUpdateForm(forms.ModelForm):
         start_date = cleaned_data['start_date']
         end_date = cleaned_data['end_date']
         
-        reservation = self.instance
         prev_reservation = Reservation.objects.filter(
-            patient=reservation.patient,
-            end_date__range=(start_date, reservation.start_date)
+            patient=self.instance.patient,
+            end_date__range=(start_date, self.instance.start_date)
             ).order_by('-end_date').first()
         next_reservation = Reservation.objects.filter(
-            patient=reservation.patient,
-            start_date__range=(reservation.end_date, end_date)
+            patient=self.instance.patient,
+            start_date__range=(self.instance.end_date, end_date)
             ).order_by('start_date').first()
 
         if prev_reservation:
@@ -182,3 +229,10 @@ class ReservationUpdateForm(forms.ModelForm):
                 NON_FIELD_ERRORS, 
                 f'Pacjent ma już zarezerwowany pobyt w tym terminie, {next_reservation.start_date} - {next_reservation.end_date}'
                 )
+
+
+class TimetableForm(forms.ModelForm):
+    
+    class Meta:
+        model = Timetable
+        fields = ['patient', 'employee', 'day_timetable', 'hour_timetable', 'reservation']

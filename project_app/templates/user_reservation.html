@@ -1,61 +1,99 @@
 {% extends 'base.html' %}
 {% block title %} User Reservations {% endblock %}
 {% block content %}
-    <div class="container my-container">
-        <div class="row">
-            <h3><b>Rezerwacje: {{ patient }}</b></h3>
+    <div class="container my-div-container">
+        <div class="row my-div-header">
+            <div class="col">
+                <h4>
+                    {% if request.user.status == 1 %}
+                        Rezerwacje: {{ patient }}
+                    {% else %}
+                        Twoje Rezerwacje
+                    {% endif %}
+                </h4>
+        </div>
         </div>
         {% if reservation %}
             <table class="table">
                 <thead>
                     <tr class="d-flex flex-wrap">
-                        <th scope="row" class="col-1 my-table-user-reservation">Nr pokoju:</th>
-                        <th scope="row" class="col-2 my-table-user-reservation">Data rozpoczęcia:</th>
-                        <th scope="row" class="col-2 my-table-user-reservation">Data zakończenia:</th>
-                        <th scope="row" class="col-7">Wiadomość:</th>
+                        <th class="col-1">Nr pokoju:</th>
+                        <th class="col-2">Data rozpoczęcia:</th>
+                        <th class="col-2">Data zakończenia:</th>
+                        {% if request.user.status == 1 %}
+                            <th class="col-5">Notatka:</th>
+                            <th class="col-2 text-center">#</th>
+                        {% else %}
+                            <th class="col-7">Notatka:</th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
                     <tr class="d-flex flex-wrap">
-                        <td class="col-1 my-table-user-reservation">{{ reservation.room }}</td>
-                        <td class="col-2 my-table-user-reservation">{{ reservation.start_date|date:"j E Y" }}</td>
-                        <td class="col-2 my-table-user-reservation">{{ reservation.end_date|date:"j E Y" }}</td>
-                        <td class="col-7">{{ reservation.message }}</td>
+                        <td class="col-1">{{ reservation.room }}</td>
+                        <td class="col-2">{{ reservation.start_date|date:"j E Y" }}</td>
+                        <td class="col-2">{{ reservation.end_date|date:"j E Y" }}</td>
+                        {% if request.user.status == 1 %}
+                            <td class="col-5">{{ reservation.message }}</td>
+                            <td class="col-2 d-flex justify-content-center">
+                                <a class="btn btn-success my-user-button"
+                                    href="{% url 'reservation-update' pk=reservation.id %}?next={{ request.get_full_path }}">Edytuj</a>
+                                <a class="btn btn-danger my-user-button"
+                                    href="{% url 'reservation-delete' pk=reservation.id %}?next={{ request.get_full_path }}">Usuń</a>
+                            </td>
+                        {% else %}
+                            <td class="col-7">{{ reservation.message }}</td>
+                        {% endif %}
                     </tr>
                 </tbody>
             </table>
         {% endif %}
-        <div class="row">
+        <div class="row my-div-header">
             <div class="col">
                 {% if search == 'next' %}
-                <a href="{% url 'user-reservation' pk=patient.id %}?search=next" class="btn btn-outline-success">Zaplanowane</a>
-                <a href="{% url 'user-reservation' pk=patient.id %}?search=prev" class="btn btn-success">Zakończone</a>
+                    <a href="{% url 'user-reservation' pk=patient.id %}?search=next" class="btn btn-outline-success">Zaplanowane</a>
+                    <a href="{% url 'user-reservation' pk=patient.id %}?search=prev" class="btn btn-success">Zakończone</a>
                 {% else %}
-                <a href="{% url 'user-reservation' pk=patient.id %}?search=next" class="btn btn-success">Zaplanowane</a>
-                <a href="{% url 'user-reservation' pk=patient.id %}?search=prev" class="btn btn-outline-success">Zakończone</a>
+                    <a href="{% url 'user-reservation' pk=patient.id %}?search=next" class="btn btn-success">Zaplanowane</a>
+                    <a href="{% url 'user-reservation' pk=patient.id %}?search=prev" class="btn btn-outline-success">Zakończone</a>
                 {% endif %}
             </div>
         </div>
         <table class="table">
             <thead>
                 <tr class="d-flex flex-wrap">
-                    <th scope="row" class="col-1 my-table-user-reservation">Nr pokoju:</th>
-                    <th scope="row" class="col-2 my-table-user-reservation">Data rozpoczęcia:</th>
-                    <th scope="row" class="col-2 my-table-user-reservation">Data zakończenia:</th>
-                    <th scope="row" class="col-7">Wiadomość:</th>
+                    <th class="col-1">Nr pokoju:</th>
+                    <th class="col-2">Data rozpoczęcia:</th>
+                    <th class="col-2">Data zakończenia:</th>
+                    {% if request.user.status == 1 %}
+                        <th class="col-5">Notatka:</th>
+                        <th class="col-2 text-center">#</th>
+                    {% else %}
+                        <th class="col-7">Notatka:</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
                 {% for reservation in object_list %}
                     <tr class="d-flex flex-wrap">
-                        <td class="col-1 my-table-user-reservation">{{ reservation.room }}</td>
-                        <td class="col-2 my-table-user-reservation">{{ reservation.start_date|date:"j E Y" }}</td>
-                        <td class="col-2 my-table-user-reservation">{{ reservation.end_date|date:"j E Y" }}</td>
-                        <td class="col-7">{{ reservation.message }}</td>
+                        <td class="col-1">{{ reservation.room }}</td>
+                        <td class="col-2">{{ reservation.start_date|date:"j E Y" }}</td>
+                        <td class="col-2">{{ reservation.end_date|date:"j E Y" }}</td>
+                        {% if request.user.status == 1 %}
+                            <td class="col-5">{{ reservation.message }}</td>
+                            <td class="col-2 d-flex justify-content-center">
+                                <a class="btn btn-success my-user-button"
+                                    href="{% url 'reservation-update' pk=reservation.id %}?next={{ request.get_full_path }}">Edytuj</a>
+                                <a class="btn btn-danger my-user-button"
+                                    href="{% url 'reservation-delete' pk=reservation.id %}?next={{ request.get_full_path }}">Usuń</a>
+                            </td>
+                        {% else %}
+                            <td class="col-7">{{ reservation.message }}</td>
+                        {% endif %}
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="5">
+                        <td class="col-12" colspan="5">
                             {% if search == 'prev' %}
                                 Brak zakończonych terminów
                             {% else %}

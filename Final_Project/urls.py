@@ -35,15 +35,15 @@ urlpatterns = [
     path('reservation_add/', views.ReservationAddView.as_view(), name='reservation-add'),
     path('reservation_update/<int:pk>/', views.ReservationUpdateView.as_view(), name='reservation-update'),
     path('reservation_delete/<int:pk>/', views.ReservationDeleteView.as_view(), name='reservation-delete'),
-    # # path('timetable/', views.TimetableView.as_view(), name='timetable'),
-    # path('timetable/<int:pk>/', views.TimetableUserView.as_view(), name='timetable-user'),
-    path('user_reservation/<int:pk>/', views.UserReservationView.as_view(), name='user-reservation'),
+    path('reservation/<int:pk>/', views.UserReservationView.as_view(), name='user-reservation'),
+    path('timetable/', views.TimetableView.as_view(), name='timetable'),
+    path('timetable/<int:pk>/', views.UserTimetableView.as_view(), name='user-timetable'),
     
     # path('reservation/', views.UserLoginView.as_view(), name='reservation'),
     
     # path('reservation_edit/<int:id_reservation>/', views.UserLoginView.as_view(), name='reservation-edit'),
-    path('timetable/', views.UserLoginView.as_view(), name='timetable'),
-    path('timetable/<int:id_user>/', views.UserLoginView.as_view(), name='timetable-user'),
+    # path('timetable/', views.UserLoginView.as_view(), name='timetable'),
+    # path('timetable/<int:id_user>/', views.UserLoginView.as_view(), name='timetable-user'),
 
 
 ]

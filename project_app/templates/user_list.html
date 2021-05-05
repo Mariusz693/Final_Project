@@ -1,91 +1,96 @@
 {% extends 'base.html' %}
 {% block title %} User List {% endblock %}
 {% block content %}
-    <div class="container my-container">
+    <div class="container my-div-container">
         {% if message_employee %}
-            <div class="row">
+            <div class="row my-div-header">
                 <div class="col">
-                    <h3>Lista rehabilitantów w bazie danych</h3>
+                    <h4>Lista rehabilitantów</h4>
+                </div>
+                <div class="col d-flex justify-content-end">
+                    <a href="{% url 'user-add'%}?status=employee" class="btn btn-success my-user-add-button">Dodaj</a>
                 </div>
             </div>
         {% else %}
-            <div class="row">
+            <div class="row my-div-header">
                 <div class="col">
                     {% if message == 'actually_patient' %}
-                        <h3>Lista pacjentów obecnych w ośrodku</h3>
+                        <h4>Lista pacjentów - <b>obecni</b></h4>
                     {% elif message %}
-                        <h3>Wyniki wyszukiwania dla: "{{ message }}"</h3>
+                        <h4>Lista pacjentów - <b>wyszukiwanie dla: "{{ message }}"</b></h4>
                     {% else %}
-                        <h3>Lista pacjentów w bazie danych</h3>
+                        <h4>Lista pacjentów</h4>
                     {% endif %}
                 </div>
+                <div class="col d-flex justify-content-end">
+                    <a href="{% url 'user-add'%}?status=patient" class="btn btn-success my-user-button">Dodaj</a>
+                </div>
             </div>
-            <div class="row">
+            <div class="row my-div-header">
                 <div class="col">
-                    <a href="{% url 'patient-list'%}" class="btn btn-success">Wszyscy</a>
-                    <a href="{% url 'patient-list'%}?search=actually_patient" class="btn btn-success">Obecni</a>
+                    {% if message == 'actually_patient' %}
+                        <a href="{% url 'patient-list'%}" class="btn btn-success">Wszyscy</a>
+                        <a href="{% url 'patient-list'%}?search=actually_patient" class="btn btn-outline-success">Obecni</a>
+                    {% else %}
+                        <a href="{% url 'patient-list'%}" class="btn btn-outline-success">Wszyscy</a>
+                        <a href="{% url 'patient-list'%}?search=actually_patient" class="btn btn-success">Obecni</a>
+                    {% endif %}
                 </div>
                 <div class="col d-flex justify-content-end">
                     <form action="{% url 'patient-list' %}" method="GET">
-                        <label class="col-form-label" for="search">Podaj nazwisko: </label>
-                        <input  type="text" name="search" id="search" class="my-search-input">
-                        <button type="submit" class="btn btn-outline-success">Szukaj</button>
+                        <input type="text" name="search" id="search" placeholder="Podaj nazwisko">
+                        <button type="submit" class="btn btn-success">Szukaj</button>
                     </form>
                 </div>
             </div>
         {% endif %}
         <table class="table">
             <thead>
-                <tr class="d-flex">
+                <tr class="d-flex flex-wrap">
                     {% if message == 'actually_patient' %}
-                        <th scope="col" class="col-1">POKÓJ</th>
+                        <th class="col-1">POKÓJ</th>
                     {% else %}
-                        <th scope="col" class="col-1">LP</th>
+                        <th class="col-1">LP</th>
                     {% endif %}
-                    <th scope="col" class="col-4">IMIĘ I NAZWISKO</th>
-                    <th scope="col" class="col-3">EMAIL</th>
-                    <th scope="col" class="col-2">NR TELEFONU</th>
-                    <th scope="col" class="col-1">AKTYWNY</th>
-                    <th scope="col" class="col-1 text-center">#</th>
+                    <th class="col-4">IMIĘ I NAZWISKO</th>
+                    <th class="col-3">EMAIL</th>
+                    <th class="col-2">NR TELEFONU</th>
+                    <th class="col-1 text-center">AKTYWNY</th>
+                    <th class="col-1 text-center">#</th>
                 </tr>
             </thead>
             <tbody>
                 {% for user in object_list %}
-                    <tr class="d-flex">
-                        <td scope="row" class="col-1">{{ user.counter }}</td>
-                        <th scope="row" class="col-4">
+                    <tr class="d-flex flex-wrap">
+                        <td class="col-1">{{ user.counter }}</td>
+                        <th class="col-4">
                             {% if message == 'actually_patient' or message_employee %}
-                                <a href="{% url 'timetable-user' id_user=user.id %}?week_look=0">{{ user }}</a>
+                                <a href="{% url 'user-timetable' pk=user.id %}">{{ user }}</a>
                             {% else %}
                                 <a href="{% url 'user-reservation' pk=user.id %}">{{ user }}</a>
                             {% endif %}
                         </th>
-                        <td scope="row" class="col-3">{{ user.email }}</td>
-                        <td scope="row" class="col-2">{{ user.phone }}</td>
-                        <td scope="row" class="col-1" style="text-align: center;">
+                        <td class="col-3">{{ user.email }}</td>
+                        <td class="col-2">{{ user.phone }}</td>
+                        <td class="col-1 text-center">
                             {% if user.is_active %}
                                 &check;
                             {% else %}
                                 &cross;
                             {% endif %}
                         </td>
-                        <td scope="row" class="col-1 d-flex align-items-center justify-content-center flex-wrap">
-                            <a class="btn btn-outline-danger my-table-button" href="{% url 'user-delete' %}?user_id={{user.id}}">Usuń</a>
+                        <td class="col-1 d-flex justify-content-center">
+                            <a class="btn btn-danger my-user-button" href="{% url 'user-delete' %}?user_id={{user.id}}&next={{ request.get_full_path }}">Usuń</a>
                         </td>
                     </tr>
                 {% empty %}
-                    <tr><td colspan="5">Brak osób w bazie</td></tr>
+                    <tr><td class="col-12" colspan="5">Brak osób w bazie</td></tr>
                 {% endfor %}
             </tbody>
         </table>
         {% if is_paginated %}
             <div>
                 <ul class="pagination justify-content-center">
-                    {% if page_obj.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if message %}&search={{ message }}{% endif %}">Poprzednia strona</a>
-                        </li>
-                    {% endif %}
                     {% if page_obj.number|add:'-2' > 1 %}
                         <li class="page-item">
                             <a class="page-link" href="?page={{ page_obj.number|add:'-5' }}{% if message %}&search={{ message }}{% endif %}">&hellip;</a>
@@ -107,11 +112,6 @@
                     {% if page_obj.paginator.num_pages > page_obj.number|add:'2' %}
                         <li class="page-item">
                             <a class="page-link" href="?page={{ page_obj.number|add:'5' }}{% if message %}&search={{ message }}{% endif %}">&hellip;</a>
-                        </li>
-                    {% endif %}
-                    {% if page_obj.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if message %}&search={{ message }}{% endif %}">Następna strona</a>
                         </li>
                     {% endif %}
                 </ul>

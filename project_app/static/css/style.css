@@ -1,73 +1,86 @@
+
 body {
     background: #abbaab;
     background: -webkit-linear-gradient(to left, #ffffff, #abbaab);
     background: linear-gradient(to left, #ffffff, #abbaab);
 }
 
-.my-container {
+span.my-span-navbar {
+    margin-right: 10px;
+}
+
+div.my-div-container {
     margin-top: 10px;
 }
 
-.my-navbar-text {
-    margin: 5px;
+div.my-div-header{
+    margin-bottom: 5px;
 }
 
-.my-navbar-button {
-    margin: 5px;
-}
-
-.my-form {
-     margin: 10px;
-}
-
-.my-table-button {
-    margin: 2.5px 5px;
-}
-
-.my-navbar-form {
-    margin: 5px;
-}
-
-.my-month-button {
-    margin-left: 5px;
-}
-h3 {
-    margin-left: 10px;
-}
-
-.my-search-input {
-    margin-right: 5px;
-}
-
-.my-timetable-patient{
-    display: flex;
-    align-items: flex-end;
-}
-
-.my-timetable-table {
-    height: 100px;
-    vertical-align: middle;
-    align-items: center;
-}
-
-.my-h5 {
-    margin-left: 10px;
-}
-
-.my-change-week {
-    margin: 10px;
-}
-
-.my-change-div {
-    margin-top: 10px;
+div.my-form-div-row {
     margin-bottom: 10px;
 }
 
-.my-patient {
-    margin: 5px;
-    background-color: white;
+div.my-form-div-error {
+    color: #CC0000;
+}
+
+table.my-table-reservation {
+    table-layout: fixed;
+}
+
+table.my-table-border {
+    border: 3px solid black;
+}
+
+table th.my-table-reservation-room-list {
+    border: 1.5px solid black;
+    text-align: center;
+    vertical-align: middle;
+    width: 7.5%;
+}
+
+table th.my-table-reservation-header {
+    border: 1.5px solid black;
+    text-align: center;
+}
+
+table td.my-table-reservation-element {
+    border-top: 1.5px solid black;
+    background-color: #479e72;
+    border-radius: 15px;
+}
+
+table td.my-table-reservation-element-left {
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+}
+
+table td.my-table-reservation-element-right {
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+
+table td.my-table-reservation-free-element {
+    border-top: 1.5px solid black;
+}
+
+table td a.my-table-reservation-cursor {
+    cursor: pointer;
+    color: black;
+}
+
+table tr.my-table-timetable {
+    height: 105px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+div.my-timetable-patient-element {
+    margin: 2.5%;
+    background-color: #479e72;
     height: 35px;
-    width: 80%;
+    width: 95%;
     border: black solid 1px;
     border-radius: 5px;
     text-align: center;
@@ -75,56 +88,18 @@ h3 {
     cursor: alias;
 }
 
-.my-patient_2 {
-    margin: 5px;
-    background-color: white;
+.my-user-button {
+    margin: 0px 3px;
+    height: 37.5px;
+}
+
+div.my-timetable-user-element {
+    margin: 2.5%;
+    background-color: #479e72;
     height: 35px;
-    width: 80%;
+    width: 95%;
     border: black solid 1px;
     border-radius: 5px;
     text-align: center;
     padding: 5px;
-}
-
-a.my-cursor {
-    cursor: pointer;
-    color: black;
-}
-
-.my-form-row {
-    margin: 10px;
-}
-
-table.my-table-border {
-    border: 3px solid black;
-}
-
-table.my-table-border th.my-table-room-list {
-    border: 1.5px solid black;
-    text-align: center;
-    vertical-align: middle;
-}
-
-table.my-table-border td.my-reservation-element {
-    border-top: 1.5px solid black;
-    background-color: #6ebe96;
-    border-radius: 10px;
-}
-
-table.my-table-border td.my-free-element {
-    border-top: 1.5px solid black;
-}
-
-table.my-table-border th.my-call-border {
-    border: 1.5px solid black;
-}
-
-table th.my-table-user-reservation {
-    text-align: center;
-    vertical-align: middle;
-}
-
-table td.my-table-user-reservation {
-    text-align: center;
-    vertical-align: middle;
 }

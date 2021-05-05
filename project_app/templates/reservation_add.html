@@ -2,24 +2,24 @@
 {% load crispy_forms_tags %}
 {% block title %} Reservation Add {% endblock %}
 {% block content %}
-    <div class="container my-container">
-        <div class="row">
+    <div class="container my-div-container">
+        <div class="row my-div-header">
             <div class="col">
-                <h3>Rezerwacja - pokój nr {{ form.room.value }}</h3>
+                <h4>Rezerwacja - <b>pokój nr {{ form.room.value }}</b></h4>
             </div>
         </div>
         <form class="form-control" action="" method="POST">
             {% csrf_token %}
             {% if form.non_field_errors %}
                 {% for error in form.non_field_errors %}
-                    <div class="row my-form-row">
-                        <div class="col" style="color: #CC0000;">
+                    <div class="row my-form-div-row">
+                        <div class="col my-form-div-error">
                             <p><strong>{{ error }}</strong></p>
                         </div>
                     </div>
                 {% endfor %}
             {% endif %}
-            <div class="row my-form-row">
+            <div class="row my-form-div-row">
                 <div class="col-6">
                     {{ form.patient|as_crispy_field }}
                 </div>
@@ -27,7 +27,7 @@
                     {{ form.room|as_crispy_field }}
                 </div>
             </div>
-            <div class="row my-form-row">
+            <div class="row my-form-div-row">
                 <div class="col-6">
                     {{ form.start_date|as_crispy_field }}
                 </div>
@@ -35,17 +35,17 @@
                     {{ form.end_date|as_crispy_field }}
                 </div>
             </div>
-            <div class="row my-form-row">
+            <div class="row my-form-div-row">
                 <div class="col-12">
                     {{ form.message|as_crispy_field }}
                 </div>
             </div>
-            <div class="row my-form-row">
+            <div class="row my-form-div-row">
                 <div class="col">
                     <input type="submit" class="btn btn-success" value="Dodaj">
                 </div>
                 <div class="col d-flex justify-content-end">
-                    <a class="btn btn-danger" href="{% url 'reservation' %}?month_look={{ request.GET.selected_month }}">Anuluj</a>
+                    <a class="btn btn-danger" href="{{ request.GET.next }}">Anuluj</a>
                 </div>
             </div>
         </form>

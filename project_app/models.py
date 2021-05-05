@@ -60,21 +60,22 @@ class Reservation(models.Model):
     room = models.ForeignKey(Room, verbose_name='Pokój', on_delete=models.CASCADE)
     start_date = models.DateField(verbose_name='Data rozpoczęcia')
     end_date = models.DateField(verbose_name='Data zakończenia')
-    message = models.TextField(verbose_name='Wiadomość', blank=True)
+    message = models.TextField(verbose_name='Notatka', blank=True)
     patient = models.ForeignKey(User, limit_choices_to={'status': 3}, verbose_name='Pacjent', on_delete=models.CASCADE)
-    duration = DateRangeField()
 
-    def save(self, *args, **kwargs):
-
-        self.duration = [self.start_date, self.end_date]
+    @classmethod
+    def from_db(cls, db, field_names, values):
+    
+        instance = super().from_db(db, field_names, values)
+        instance._loaded_values = dict(zip(field_names, values))
         
-        super().save(*args, **kwargs)
+        return instance
 
     def validate_unique(self, *args, **kwargs):
         
         super().validate_unique(*args, **kwargs)
 
-        if self.end_date <= self.start_date:
+        if self.end_date < self.start_date:
             raise ValidationError({NON_FIELD_ERRORS: 'Data zakończenia musi być poźniej od daty rozpoczęcia'})
 
         if self._state.adding:
@@ -88,8 +89,8 @@ class Reservation(models.Model):
                 raise ValidationError({NON_FIELD_ERRORS: 'Pokój jest już zarezerwowany w tym terminie, sprawdź terminarz'})
         else:
             reservation_room = self.__class__._default_manager.filter(
-                Q(room=self.room, end_date__range=(self.start_date, self.duration.lower))
-                |Q(room=self.room, start_date__range=(self.duration.upper, self.end_date))
+                Q(room=self.room, end_date__range=(self.start_date, self._loaded_values['start_date']))
+                |Q(room=self.room, start_date__range=(self._loaded_values['end_date'], self.end_date))
             ).first()
 
             if reservation_room:                
@@ -98,8 +99,8 @@ class Reservation(models.Model):
 
 class Timetable(models.Model):
     
-    patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='patient_timetable')
-    employee = models.ForeignKey(User, on_delete=models.CASCADE, related_name='employee_timetable')
+    patient = models.ForeignKey(User, limit_choices_to={'status': 3}, on_delete=models.CASCADE, related_name='patient_timetable')
+    employee = models.ForeignKey(User, limit_choices_to={'status': 2}, on_delete=models.CASCADE, related_name='employee_timetable')
     day_timetable = models.DateField()
     hour_timetable = models.SmallIntegerField(choices=HOUR_CHOICES)
     reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE)

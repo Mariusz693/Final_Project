@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %} Timetable User {% endblock %}
+{% block content %}
+    <div class="container my-div-container">
+        <div class="row my-div-header">
+            <div class="col">
+                <h4>Grafik tygodniowy: <b>{{ user }}</b></h4>
+            </div>
+        </div>
+        <div class="row my-div-header">
+            <div class="col">
+                <a class="btn btn-info" href="{% url 'user-timetable' pk=user.id %}?week_look={{ all_week.1|date:'Y-m-d' }}">&lt; Poprzedni tydzień</a>
+                <a class="btn btn-info" href="{% url 'user-timetable' pk=user.id %}?week_look={{ all_week.2|date:'Y-m-d' }}">Następny tydzień &gt;</a>
+            </div>
+            <div class="col d-flex justify-content-end">
+                <form action="{% url 'user-timetable' pk=user.id%}" method="GET">
+                    <label for="week_look">Miesiąc</label>
+                    <select class="custom-select" id="week_look" name="week_look">
+                    {% for month in month_list %}
+                        <option value="{{ month|date:'Y-m-d' }}" {% if month|date:'Y-m' == all_week.0.0|date:'Y-m' %} selected {% endif %}>
+                            {{ month|date:"F Y" }}
+                        </option>
+                    {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-success">Wybierz</button>
+                </form>
+            </div>
+        </div>
+        <table class="table table-bordered my-table-border">
+            <thead>
+                <tr class="my-table-timetable">
+                    <th rowspan="2" class="col-2">Godzina</th>
+                    {% for day in all_week.0 %}
+                        <th class="col-2">{{ day|date:"l j E" }}</th>
+                    {% endfor %}
+                </tr>
+                <tr class="my-table-timetable">
+                    <th colspan="5" class="col-10">
+                        {% if user.status == 3 %}
+                            Rehabilitant
+                        {% else %}
+                            Pacjenci
+                        {% endif %}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for hours in timetable_week %}
+                <tr class="my-table-timetable">
+                    {% for item in hours %}
+                        {% if forloop.counter == 1 %}
+                            <th class="col-2">{{ item }}</th>
+                        {% else %}
+                            {% if item %}
+                                <td class="col-2">
+                                    <div class="my-timetable-user-element">{{ item }}</div>
+                                </td>
+                            {% else %}
+                                <td class="col-2"></td>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

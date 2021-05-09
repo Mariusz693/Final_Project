@@ -4,7 +4,6 @@ from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
-from django.contrib.postgres.fields import DateRangeField
 
 from .managers import CustomUserManager
 from .validators import validate_tel_number
@@ -28,7 +27,7 @@ class User(AbstractUser):
     last_name = models.CharField(verbose_name='Nazwisko', max_length=64)
     email = models.EmailField(verbose_name='Email', max_length=255, unique=True)
     phone = models.CharField(verbose_name='Telefon (+48...)', max_length=9, validators=[validate_tel_number])
-    status = models.SmallIntegerField(choices=STATUS_CHOICE)
+    status = models.SmallIntegerField(verbose_name='Status', choices=STATUS_CHOICE)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -49,7 +48,7 @@ class User(AbstractUser):
         
 class Room(models.Model):
     
-    room_number = models.SmallIntegerField(unique=True)
+    room_number = models.SmallIntegerField(verbose_name='Pokój', unique=True)
 
     def __str__(self):
         return str(self.room_number)
@@ -61,7 +60,7 @@ class Reservation(models.Model):
     start_date = models.DateField(verbose_name='Data rozpoczęcia')
     end_date = models.DateField(verbose_name='Data zakończenia')
     message = models.TextField(verbose_name='Notatka', blank=True)
-    patient = models.ForeignKey(User, limit_choices_to={'status': 3}, verbose_name='Pacjent', on_delete=models.CASCADE)
+    patient = models.ForeignKey(User, limit_choices_to={'status': 3, 'is_active': True}, verbose_name='Pacjent', on_delete=models.CASCADE)
 
     @classmethod
     def from_db(cls, db, field_names, values):
@@ -99,17 +98,26 @@ class Reservation(models.Model):
 
 class Timetable(models.Model):
     
-    patient = models.ForeignKey(User, limit_choices_to={'status': 3}, on_delete=models.CASCADE, related_name='patient_timetable')
-    employee = models.ForeignKey(User, limit_choices_to={'status': 2}, on_delete=models.CASCADE, related_name='employee_timetable')
-    day_timetable = models.DateField()
-    hour_timetable = models.SmallIntegerField(choices=HOUR_CHOICES)
-    reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE)
+    patient = models.ForeignKey(User, limit_choices_to={'status': 3, 'is_active': True}, verbose_name='Pacjent', on_delete=models.CASCADE, related_name='patient_timetable')
+    employee = models.ForeignKey(User, limit_choices_to={'status': 2, 'is_active': True}, verbose_name='Rehabilitant', on_delete=models.CASCADE, related_name='employee_timetable')
+    day_timetable = models.DateField(verbose_name='Dzień')
+    hour_timetable = models.SmallIntegerField(choices=HOUR_CHOICES, verbose_name='Godzina')
+    reservation = models.ForeignKey(Reservation, verbose_name='Rezerwacja', on_delete=models.CASCADE)
 
-    class Meta:
-        unique_together = ('day_timetable', 'patient')
+    def validate_unique(self, *args, **kwargs):
+        
+        super().validate_unique(*args, **kwargs)
 
+        timetable = self.__class__._default_manager.filter(
+            employee=self.employee,
+            day_timetable=self.day_timetable,
+            hour_timetable=self.hour_timetable
+        ).first()
+
+        if timetable:                
+            raise ValidationError({NON_FIELD_ERRORS: 'Grafik zajety'})
 
 class UserUniqueToken(models.Model):
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    token = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, verbose_name='Użytkownik', on_delete=models.CASCADE)
+    token = models.UUIDField(primary_key=True, verbose_name='Token', default=uuid.uuid4, editable=False)

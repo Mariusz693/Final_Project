@@ -1,10 +1,12 @@
-from django import forms
 import datetime
+
+from django import forms
 from django.contrib.auth import authenticate
 from django.db.models import Q
-from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
+from django.core.exceptions import NON_FIELD_ERRORS
+
 from .validators import validate_password
-from .models import User, Reservation, HOUR_CHOICES, STATUS_CHOICE, Room, Timetable
+from .models import User, Reservation, Room, Timetable
 from .function import change_day_to_date
 
 
@@ -49,9 +51,9 @@ class UserLoginForm(forms.Form):
 
 class UserPasswordUpdateForm(forms.Form):
 
-    password_check = forms.CharField(label='Poprzenie hasło', max_length=64)
-    password_new = forms.CharField(label='Nowe hasło', max_length=64, validators=[validate_password])
-    password_repeat = forms.CharField(label='Powtórz hasło', max_length=64)
+    password_check = forms.CharField(label='Poprzenie hasło', max_length=64, widget=forms.PasswordInput())
+    password_new = forms.CharField(label='Nowe hasło', max_length=64, widget=forms.PasswordInput())
+    password_repeat = forms.CharField(label='Powtórz hasło', max_length=64, widget=forms.PasswordInput())
     email = forms.CharField(widget=forms.HiddenInput())
 
     def clean(self):
@@ -75,8 +77,8 @@ class UserPasswordUpdateForm(forms.Form):
 
 class UserPasswordSetForm(forms.Form):
 
-    password_new = forms.CharField(label='Nowe hasło', max_length=64, validators=[validate_password])
-    password_repeat = forms.CharField(label='Powtórz hasło', max_length=64)
+    password_new = forms.CharField(label='Nowe hasło', max_length=64, widget=forms.PasswordInput())
+    password_repeat = forms.CharField(label='Powtórz hasło', max_length=64, widget=forms.PasswordInput())
 
     def clean(self):
 
@@ -231,8 +233,16 @@ class ReservationUpdateForm(forms.ModelForm):
                 )
 
 
-class TimetableForm(forms.ModelForm):
+class TimetableAddForm(forms.ModelForm):
     
     class Meta:
         model = Timetable
         fields = ['patient', 'employee', 'day_timetable', 'hour_timetable', 'reservation']
+
+
+class TimetableUpdateForm(forms.ModelForm):
+    
+    class Meta:
+        model = Timetable
+        fields = ['employee', 'hour_timetable']
+        

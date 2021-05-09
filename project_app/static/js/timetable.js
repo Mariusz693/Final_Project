@@ -5,10 +5,31 @@ function attachDropEvents(a) {
     };
     a.ondrop = function (e) {
         let url = window.location.href;
-        let patientElId = e.dataTransfer.getData('Text');
+        let patientElId = e.dataTransfer.getData('patient_id');
         let patientEl = document.getElementById(patientElId);
+        let timetableId = patientEl.dataset.timetable_id;
         e.target.appendChild(patientEl);
-        if (e.target.tagName === 'TD') {
+        if (e.target.tagName === 'TD' && timetableId) {
+            e.target.classList.remove('my-dragdrop');
+            const obj = {
+                timetable: timetableId,
+                employee: e.target.dataset.employee_id,
+                hour_timetable: e.target.dataset.hour
+            };
+            fetch(url, {
+                method: 'PUT',
+                body: JSON.stringify(obj),
+            })
+            .then(response => {
+                if (response.status !== 200){
+                    throw Error();
+                }
+            })
+            .catch(error => {
+                window.location = url;
+            });
+        }
+        else if (e.target.tagName === 'TD') {
             e.target.classList.remove('my-dragdrop');
             const obj = {
                 patient: patientElId,
@@ -18,43 +39,45 @@ function attachDropEvents(a) {
                 day_timetable: e.target.dataset.date
             };
             fetch(url, {
-                    method: 'POST',
-                    body: JSON.stringify(obj),
-                })
-                .then(async (response) => {
-                    return await response.text();
-                })
-                .then(data => {
-                    if (data) {
-                        e.target.firstElementChild.dataset.timetable_id = data;
-                    }
-                    else {
-                        window.location = url;
-                    }
-                })
-                .catch(e => console.error('Błąd' + e));
-
+                method: 'POST',
+                body: JSON.stringify(obj),
+            })
+            .then(response => {
+                if (response.status === 200){
+                    return response.json();
+                }
+                else {
+                    throw Error();
+                }
+            })
+            .then(data => {
+                e.target.firstElementChild.dataset.timetable_id = data['instance'];
+            })
+            .catch(error => {
+                window.location = url;
+            });
         }
-        else if (e.target.tagName === 'DIV'){
+        else if (e.target.id === 'free-patient'){
             const obj = {
                 timetable: patientEl.dataset.timetable_id
             };
             fetch(url, {
-                    method: 'DELETE',
-                    body: JSON.stringify(obj),
-                })
-                .then(async (response) => {
-                    return await response.text();
-                })
-                .then(data => {
-                    if (data) {
-                        patientEl.dataset.timetable_id = "";
-                    }
-                    else {
-                        window.location = url;
-                    }
-                })
-                .catch(e => console.error('Błąd' + e));
+                method: 'DELETE',
+                body: JSON.stringify(obj),
+            })
+            .then(response => {
+                if (response.status === 200){
+                    patientEl.dataset.timetable_id = "";
+                }
+                else {
+                    throw Error();
+                }
+            })
+            .catch(error => {
+                window.location = url;
+            });
+        } else {
+            window.location = url;
         }
         e.preventDefault();
     };
@@ -64,7 +87,7 @@ document.addEventListener("DOMContentLoaded", function () {
     for (let i=0, patientEl, patientsEl = document.getElementsByClassName('my-timetable-patient-element'); patientEl = patientsEl[i]; i++){
         patientEl.draggable = true;
         patientEl.ondragstart = function(e){
-            e.dataTransfer.setData('Text', e.target.id);
+            e.dataTransfer.setData('patient_id', e.target.id);
             if (e.target.parentElement.tagName === 'TD'){
                 e.target.parentElement.classList.add('my-dragdrop');
                 attachDropEvents(e.target.parentElement);

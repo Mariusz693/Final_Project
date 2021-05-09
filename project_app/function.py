@@ -1,10 +1,12 @@
-from calendar import LocaleHTMLCalendar, calendar
 import datetime
 import calendar
+
+from calendar import LocaleHTMLCalendar
 
 
 DAY_NAMES = ('Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd')
 MONTH_SYMBOLS = ('I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII')
+
 
 class Calendar(LocaleHTMLCalendar):
     def __init__(self):

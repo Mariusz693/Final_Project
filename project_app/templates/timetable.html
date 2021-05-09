@@ -12,9 +12,9 @@
             <div class="col">
                 {% for day in all_week.0 %}
                     {% if day == day_look %}
-                        <a class="btn btn-outline-success" href="{% url 'timetable' %}?day_look={{ day|date:'Y-m-d' }}">{{ day|date:'l' }}</a>
+                        <a class="btn btn-outline-success" href="{% url 'timetable' %}?day_look={{ day }}">{{ day|date:'l' }}</a>
                     {% else %}
-                        <a class="btn btn-success" href="{% url 'timetable' %}?day_look={{ day|date:'Y-m-d' }}">{{ day|date:'l' }}</a>
+                        <a class="btn btn-success" href="{% url 'timetable' %}?day_look={{ day }}">{{ day|date:'l' }}</a>
                     {% endif %}
                 {% endfor %}
             </div>
@@ -23,15 +23,15 @@
             <div class="col-9">
                 <div class="row">
                     <div class="col">
-                        <a class="btn btn-info" href="{% url 'timetable' %}?day_look={{ all_week.1|date:'Y-m-d' }}">&lt; Poprzedni tydzień</a>
-                        <a class="btn btn-info" href="{% url 'timetable' %}?day_look={{ all_week.2|date:'Y-m-d' }}">Następny tydzień &gt;</a>
+                        <a class="btn btn-info" href="{% url 'timetable' %}?day_look={{ all_week.1 }}">&lt; Poprzedni tydzień</a>
+                        <a class="btn btn-info" href="{% url 'timetable' %}?day_look={{ all_week.2 }}">Następny tydzień &gt;</a>
                     </div>
                     <div class="col d-flex justify-content-end">
                         <form action="{% url 'timetable' %}" method="GET">
                             <label for="day_look">Miesiąc</label>
                             <select class="custom-select" id="day_look" name="day_look">
                             {% for month in month_list %}
-                                <option value="{{ month|date:'Y-m-d' }}" {% if month|date:'Y-m' == day_look|date:'Y-m' %} selected {% endif %}>
+                                <option value="{{ month }}" {% if month|date:'Y-m' == day_look|date:'Y-m' %} selected {% endif %}>
                                     {{ month|date:"F Y" }}
                                 </option>
                             {% endfor %}
@@ -59,8 +59,8 @@
                                 <td class="col-3 my-table-timetable-employee">{{ employee.0 }}</td>
                                 {% for timetable in employee.1 %}
                                     {% if timetable %}
-                                    <td class="col-3 my-table-timetable-patient" data-employee_id="{{ employee.0.id }}"
-                                        data-hour="{{ forloop.counter }}" data-date="{{ day_look|date:'Y-m-d' }}">
+                                    <td class="col-3 my-table-timetable-patient" data-employee_id="{{ employee.0.id }}" 
+                                    data-hour="{{ forloop.counter }}" data-date="{{ day_look }}">
                                             <div class="my-timetable-patient-element" id="{{ timetable.patient.id }}" 
                                                 data-reservation_id="{{ timetable.reservation.id }}" 
                                                 data-timetable_id="{{ timetable.id }}">
@@ -68,8 +68,8 @@
                                             </div>
                                     </td>
                                     {% else %}
-                                    <td class="col-3 my-table-timetable-patient my-dragdrop" data-employee_id="{{ employee.0.id }}"
-                                        data-hour="{{ forloop.counter }}" data-date="{{ day_look|date:'Y-m-d' }}">
+                                    <td class="col-3 my-table-timetable-patient my-dragdrop" data-employee_id="{{ employee.0.id }}" 
+                                    data-hour="{{ forloop.counter }}" data-date="{{ day_look }}">
                                     </td>
                                     {% endif %}
                                 {% endfor %}
@@ -78,7 +78,7 @@
                     </tbody>
                 </table>
             </div>
-            <div class="col-3 my-dragdrop">
+            <div class="col-3 my-dragdrop" id="free-patient">
                 {% for patient in patient_free_list %}
                     <div class="my-timetable-patient-element" id="{{ patient.id }}" 
                         data-timetable_id="" data-reservation_id="{{ patient.reservation_id }}">

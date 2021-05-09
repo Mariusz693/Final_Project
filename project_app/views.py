@@ -1,23 +1,21 @@
 import datetime
 import json
 
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import View, FormView, DeleteView, CreateView, UpdateView, DetailView, ListView
 from django.contrib.auth import login, logout
 from django.core.mail import send_mail
 from django.db.models import Q
-from django.core.paginator import Paginator
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
 from django.urls import reverse, reverse_lazy
-from django.contrib import messages
-from django.contrib.auth import authenticate
+from django.core.exceptions import ValidationError
 
-from .models import User, Room, Reservation, Timetable, UserUniqueToken, HOUR_CHOICES, ValidationError
+from .models import User, Room, Reservation, Timetable, UserUniqueToken, HOUR_CHOICES
 from .forms import UserLoginForm, UserPasswordUpdateForm, UserPasswordSetForm, UserPasswordResetForm, ReservationAddForm, \
-     ReservationUpdateForm, TimetableForm
+     ReservationUpdateForm, TimetableAddForm, TimetableUpdateForm
 from .function import generate_list, generate_month, generate_week_timetable, change_day_to_date, set_day_look
 
 
@@ -514,8 +512,8 @@ class ReservationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView)
         
         initial = super().get_initial()
         initial.update({
-            'start_date': str(self.get_object().start_date),
-            'end_date': str(self.get_object().end_date)
+            'start_date': self.get_object().start_date,
+            'end_date': self.get_object().end_date
         })
 
         return initial
@@ -601,40 +599,32 @@ class TimetableView(LoginRequiredMixin, UserPassesTestMixin, View):
     def post(self, request):
 
         data = json.loads(request.body.decode())
-        form = TimetableForm(data)
-        print(data)
-        if form.is_valid():
-            print('jestem')
-            timetable, _ = Timetable.objects.update_or_create(
-                patient=form.cleaned_data['patient'], day_timetable=form.cleaned_data['day_timetable'],
-                defaults={
-                    'patient': form.cleaned_data['patient'],
-                    'employee': form.cleaned_data['employee'],
-                    'day_timetable': form.cleaned_data['day_timetable'],
-                    'hour_timetable': form.cleaned_data['hour_timetable'],
-                    'reservation': form.cleaned_data['reservation']
-                }
-            )
+        form = TimetableAddForm(data)
         
-            return HttpResponse(timetable.id)
+        if form.is_valid():
+            timetable = form.save()
 
-        return HttpResponse('')
+            return JsonResponse({'instance': timetable.id}, status=200)
+
+    def put(self, request):
+        
+        data = json.loads(request.body.decode())
+        form = TimetableUpdateForm(data)
+        form.instance = get_object_or_404(Timetable, id=int(data['timetable']))
+
+        if form.is_valid():
+            form.save()
+        
+            return JsonResponse({}, status=200)
 
     def delete(self, request):
-
-        data = json.loads(request.body.decode())
-        timetable = int(data['timetable'])
-
-        try:
-            timetable = Timetable.objects.get(id=timetable)
-            timetable.delete()
-
-            return HttpResponse('OK')
-
-        except Exception:
-
-            return HttpResponse('')
         
+        data = json.loads(request.body.decode())
+        timetable = get_object_or_404(Timetable, id=int(data['timetable']))
+        timetable.delete()
+    
+        return JsonResponse({}, status=200)
+
 
 class UserTimetableView(LoginRequiredMixin, UserPassesTestMixin, View):
     """

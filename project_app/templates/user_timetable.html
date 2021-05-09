@@ -9,15 +9,15 @@
         </div>
         <div class="row my-div-header">
             <div class="col">
-                <a class="btn btn-info" href="{% url 'user-timetable' pk=user.id %}?week_look={{ all_week.1|date:'Y-m-d' }}">&lt; Poprzedni tydzień</a>
-                <a class="btn btn-info" href="{% url 'user-timetable' pk=user.id %}?week_look={{ all_week.2|date:'Y-m-d' }}">Następny tydzień &gt;</a>
+                <a class="btn btn-info" href="{% url 'user-timetable' pk=user.id %}?week_look={{ all_week.1 }}">&lt; Poprzedni tydzień</a>
+                <a class="btn btn-info" href="{% url 'user-timetable' pk=user.id %}?week_look={{ all_week.2 }}">Następny tydzień &gt;</a>
             </div>
             <div class="col d-flex justify-content-end">
                 <form action="{% url 'user-timetable' pk=user.id%}" method="GET">
                     <label for="week_look">Miesiąc</label>
                     <select class="custom-select" id="week_look" name="week_look">
                     {% for month in month_list %}
-                        <option value="{{ month|date:'Y-m-d' }}" {% if month|date:'Y-m' == all_week.0.0|date:'Y-m' %} selected {% endif %}>
+                        <option value="{{ month }}" {% if month|date:'Y-m' == all_week.0.0|date:'Y-m' %} selected {% endif %}>
                             {{ month|date:"F Y" }}
                         </option>
                     {% endfor %}

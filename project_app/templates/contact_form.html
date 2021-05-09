@@ -1,15 +1,20 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
-{% block title %} User Edit {% endblock %}
+{% block title %} Contact {% endblock %}
 {% block content %}
     <div class="container my-div-container">
         <div class="row my-div-header">
             <div class="col">
-                <h4>Edycja profilu</h4>
+                <h4>Formularz kontaktowy</h4>
             </div>
         </div>
         <form class="form-control" action="" method="POST">
             {% csrf_token %}
+            <div class="row my-form-div-row">
+                <div class="col-6">
+                    {{ form.subject|as_crispy_field }}
+                </div>
+            </div>
             <div class="row my-form-div-row">
                 <div class="col-6">
                     {{ form.first_name|as_crispy_field }}
@@ -27,11 +32,16 @@
                 </div>
             </div>
             <div class="row my-form-div-row">
+                <div class="col-12">
+                    {{ form.message|as_crispy_field }}
+                </div>
+            </div>
+            <div class="row my-form-div-row">
                 <div class="col">
-                    <input type="submit" class="btn btn-success" value="Potwierdź">
+                    <input type="submit" class="btn btn-success" value="Wyślij">
                 </div>
                 <div class="col d-flex justify-content-end">
-                    <a class="btn btn-danger" href="{% url 'user-details' %}">Anuluj</a>
+                    <a class="btn btn-danger" href="{% url 'index' %}">Anuluj</a>
                 </div>
             </div>
         </form>

@@ -4,10 +4,11 @@ from django import forms
 from django.contrib.auth import authenticate
 from django.db.models import Q
 from django.core.exceptions import NON_FIELD_ERRORS
+from django.core.validators import EmailValidator
 
-from .validators import validate_password
+from .validators import validate_password, validate_phone
 from .models import User, Reservation, Room, Timetable
-from .function import change_day_to_date
+from .utils import change_day_to_date
 
 
 class DateInput(forms.DateInput):
@@ -150,7 +151,6 @@ class ReservationAddForm(forms.ModelForm):
         start_date = cleaned_data['start_date']
         end_date = cleaned_data['end_date']
         patient = cleaned_data['patient']
-
         prev_reservation = patient.reservation_set.filter(end_date__range=(start_date, end_date)).order_by('-end_date').first()
         next_reservation = patient.reservation_set.filter(start_date__range=(start_date, end_date)).order_by('start_date').first()
         during_reservation = patient.reservation_set.filter(start_date__lte=start_date, end_date__gte=end_date).first()
@@ -211,7 +211,6 @@ class ReservationUpdateForm(forms.ModelForm):
 
         start_date = cleaned_data['start_date']
         end_date = cleaned_data['end_date']
-        
         prev_reservation = Reservation.objects.filter(
             patient=self.instance.patient,
             end_date__range=(start_date, self.instance.start_date)
@@ -245,4 +244,13 @@ class TimetableUpdateForm(forms.ModelForm):
     class Meta:
         model = Timetable
         fields = ['employee', 'hour_timetable']
-        
+
+
+class ContactForm(forms.Form):
+
+    subject = forms.CharField(label='Temat', max_length=64)
+    first_name = forms.CharField(label='Imię', max_length=64)
+    last_name = forms.CharField(label='Nazwisko', max_length=64)
+    email = forms.CharField(label='Email', widget=forms.EmailInput(), validators=[EmailValidator()])
+    phone = forms.CharField(label='Telefon (+48...)', validators=[validate_phone])
+    message = forms.CharField(label='Wiadomość', widget=forms.Textarea(attrs={'rows':5}))

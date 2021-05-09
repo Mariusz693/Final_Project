@@ -83,8 +83,7 @@
                                     <span class="dropdown-item"><b>
                                         {% if item.2 %} od {{ item.2 }} {% endif %} {% if item.3 %} do {{ item.3 }} {% endif %} </b></span>
                                     <a class="dropdown-item"
-                                       href="{% url 'reservation-add' %}?room={{ room.id }}&date={% if item.2 > selected_month_list.2|first %}{{ item.2 }}
-                                       {% else %}{{ selected_month_list.2|first }}{% endif %}&next={{ request.get_full_path }}">Dodaj</a>
+                                       href="{% url 'reservation-add' %}?room={{ room.id }}&date={% if item.2 > selected_month_list.2|first %}{{ item.2 }}{% else %}{{ selected_month_list.2|first }}{% endif %}&next={{ request.get_full_path }}">Dodaj</a>
                                 </div>
                             </td>
                         {% endif %}

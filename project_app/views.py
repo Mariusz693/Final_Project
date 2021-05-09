@@ -10,13 +10,13 @@ from django.db.models import Q
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse_lazy
 from django.core.exceptions import ValidationError
 
 from .models import User, Room, Reservation, Timetable, UserUniqueToken, HOUR_CHOICES
 from .forms import UserLoginForm, UserPasswordUpdateForm, UserPasswordSetForm, UserPasswordResetForm, ReservationAddForm, \
-     ReservationUpdateForm, TimetableAddForm, TimetableUpdateForm
-from .function import generate_list, generate_month, generate_week_timetable, change_day_to_date, set_day_look
+     ReservationUpdateForm, TimetableAddForm, TimetableUpdateForm, ContactForm
+from .utils import generate_list, generate_month, generate_week_timetable, change_day_to_date, set_day_look
 
 
 class IndexView(View):
@@ -88,15 +88,15 @@ class PatientListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         search = search if search else ''
         
         if search == 'actually_patient':
-            today_is = set_day_look()
+            today = set_day_look()
             reservations = Reservation.objects.filter(
-                start_date__lte=today_is,
-                end_date__gte=today_is
+                start_date__lte=today,
+                end_date__gte=today
             ).order_by('room')
             object_list = []
             
             for reservation in reservations:
-                reservation.patient.counter = reservation.room.room_number
+                reservation.patient.counter = reservation.room
                 object_list.append(reservation.patient)
         
         else:
@@ -160,15 +160,14 @@ class UserCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     def get_success_url(self, user):
        
         if user.status == 2:
-            success_url = reverse_lazy('employee-list')
+            
+            return reverse_lazy('employee-list')
     
         elif user.status == 3:    
-            success_url = reverse_lazy('patient-list')
+            
+            return reverse_lazy('patient-list')
         
-        else:
-            success_url = reverse_lazy('index')
-        
-        return success_url
+        return reverse_lazy('index')
     
     def get_initial(self):
 
@@ -180,14 +179,6 @@ class UserCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
             initial['status'] = status
         
         return initial
-
-    def form_valid(self, form):
-        
-        user = self.create_user(form.cleaned_data)
-        
-        self.send_mail(user)
-
-        return HttpResponseRedirect(self.get_success_url(user))
     
     def create_user(self, valid_data, commit=False):
         
@@ -206,10 +197,18 @@ class UserCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         send_mail(
             subject='Rejestracja konta',
             message=f'''Twoje konto zostało utworzone w naszym serwisie, twój link do aktywacji konta:
-                {self.request.get_host()}{reverse('user-password-set')}?token={new_token.token}''',
+                {self.request.get_host()}{reverse_lazy('user-password-set')}?token={new_token.token}''',
             from_email=self.request.user.email,
             recipient_list=[user.email],
         )
+
+    def form_valid(self, form):
+        
+        user = self.create_user(form.cleaned_data)
+        
+        self.send_mail(user)
+
+        return HttpResponseRedirect(self.get_success_url(user))
 
 
 class UserDeleteView(LoginRequiredMixin, DeleteView):
@@ -356,7 +355,7 @@ class UserPasswordResetView(FormView):
         send_mail(
             subject='Resetowanie hasla',
             message=f'''Twój link do ustawienia nowego hasła:
-                {self.request.get_host()}{reverse('user-password-set')}?token={new_token.token}''',
+                {self.request.get_host()}{reverse_lazy('user-password-set')}?token={new_token.token}''',
             from_email='webmaster@localhost',
             recipient_list=[user.email],
         )
@@ -508,16 +507,6 @@ class ReservationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView)
         
         return next_url    
     
-    def get_initial(self):
-        
-        initial = super().get_initial()
-        initial.update({
-            'start_date': self.get_object().start_date,
-            'end_date': self.get_object().end_date
-        })
-
-        return initial
-
     def form_valid(self, form):
         
         reservation = form.save()
@@ -713,3 +702,28 @@ class UserReservationView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         context['search'] = self.search
 
         return context
+
+
+class ContactView(FormView):
+
+    form_class = ContactForm
+    success_url = reverse_lazy('index')
+    template_name = 'contact_form.html'
+
+    def form_valid(self, form):
+
+        admins = User.objects.filter(status=1).values_list('email')
+        emails_to_send = [admin[0] for admin in admins]
+        send_mail(
+            subject=form.cleaned_data['subject'],
+            message=f'''
+            Imię: {form.cleaned_data['first_name']},
+            Nazwisko: {form.cleaned_data['last_name']},
+            Telefon: {form.cleaned_data['phone']},
+            Wiadomość: {form.cleaned_data['message']},
+            ''',
+            from_email=form.cleaned_data['email'],
+            recipient_list=emails_to_send,
+        )
+        
+        return super().form_valid(form)

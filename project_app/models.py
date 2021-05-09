@@ -6,7 +6,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
 
 from .managers import CustomUserManager
-from .validators import validate_tel_number
+from .validators import validate_phone
 
 HOUR_CHOICES = (
     (1, '8:00 - 11:00'),
@@ -26,7 +26,7 @@ class User(AbstractUser):
     first_name = models.CharField(verbose_name='Imię', max_length=64)
     last_name = models.CharField(verbose_name='Nazwisko', max_length=64)
     email = models.EmailField(verbose_name='Email', max_length=255, unique=True)
-    phone = models.CharField(verbose_name='Telefon (+48...)', max_length=9, validators=[validate_tel_number])
+    phone = models.CharField(verbose_name='Telefon (+48...)', max_length=9, validators=[validate_phone])
     status = models.SmallIntegerField(verbose_name='Status', choices=STATUS_CHOICE)
 
     USERNAME_FIELD = 'email'

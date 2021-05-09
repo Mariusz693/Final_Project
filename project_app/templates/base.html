@@ -18,9 +18,9 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                {% if request.user.is_authenticated %}
-                    {% if request.user.status == 1 %}
-                        <ul class="navbar-nav mr-auto">
+                <ul class="navbar-nav mr-auto">
+                    {% if request.user.is_authenticated %}            
+                        {% if request.user.status == 1 %}
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle active" href="#" id="navbarDropdown" role="button"
                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Twój panel</a>
@@ -38,9 +38,7 @@
                                     <a class="dropdown-item" href="{% url 'user-add' %}">Dodaj osobę</a>
                                 </div>
                             </li>
-                        </ul>
-                    {% else %}
-                        <ul class="navbar-nav mr-auto">
+                        {% else %}
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle active" href="#" id="navbarDropdown" role="button"
                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Twój panel</a>
@@ -56,19 +54,21 @@
                                     {% endif %}
                                 </div>
                             </li>
-                        </ul>
+                        {% endif %}
                     {% endif %}
-
-                    <div class="col d-flex justify-content-end navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'contact' %}">Kontakt</a>
+                    </li>
+                </ul>
+                <div class="col d-flex justify-content-end navbar-nav">
+                    {% if request.user.is_authenticated %}
                         <span class="navbar-text my-span-navbar">{{ request.user }}</span>
                         <a class="navbar-link btn btn-success my-navbar-button" href="{% url 'logout' %}">Wyloguj</a>
-                    </div>
-                {% else %}
-                    <div class="col d-flex justify-content-end navbar-nav">
+                    {% else %}
                         <span class="navbar-text my-span-navbar">Niezalogowany</span>
                         <a class="navbar-link btn btn-success my-navbar-button" href="{% url 'login' %}">Zaloguj</a>
-                    </div>
-                {% endif %}
+                    {% endif  %}
+                </div>
             </div>
         </div>
     </nav>

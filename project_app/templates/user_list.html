@@ -80,7 +80,7 @@
                             {% endif %}
                         </td>
                         <td class="col-1 d-flex justify-content-center">
-                            <a class="btn btn-danger my-user-button" href="{% url 'user-delete' %}?user_id={{user.id}}&next={{ request.get_full_path }}">Usuń</a>
+                            <a class="btn btn-danger my-user-button" href="{% url 'user-delete' %}?pk={{user.id}}&next={{ request.get_full_path }}">Usuń</a>
                         </td>
                     </tr>
                 {% empty %}

@@ -1,6 +1,7 @@
 import pytest
+from random import randint
 from django.test import Client
-from project_app.models import MyUser, Reservation, Timetable
+from project_app.models import User, Reservation, Timetable
 
 
 @pytest.fixture
@@ -11,54 +12,88 @@ def client():
 
 
 @pytest.fixture
-def user_admin():
-    user_admin = MyUser.objects.create_user(username='Admin', email=None, password='Admin', status=1)
+def admin():
 
-    return user_admin
-
-
-@pytest.fixture
-def user_patient():
-    user_patient = MyUser.objects.create_user(username='Patient', email=None, password='Patient', status=3)
-
-    return user_patient
-
-
-@pytest.fixture
-def user_employee():
-    user_employee = MyUser.objects.create_user(username='Employee', email=None, password='Employee', status=2)
-
-    return user_employee
+    admin = User.objects.create_user(
+        email='admin_fixture@onet.pl', 
+        first_name='Admin', 
+        last_name='Admin', 
+        phone='123456789', 
+        status=1,
+        password='Admin_123'
+        )
+    return admin
 
 
 @pytest.fixture
 def patient():
-    patient = MyUser.objects.create_user(
-        username='Artur_Dudy',
-        first_name='Artur',
-        last_name='Duda',
-        email='ad@onet.pl',
-        tel_number='689346976',
+
+    patient = User.objects.create_user(
+        email='patient_fixture@onet.pl', 
+        first_name='Patient', 
+        last_name='Patient', 
+        phone='123456789', 
         status=3,
-        password='Dudy123'
-    )
+        password='Patient_123'
+        )
 
     return patient
 
 
 @pytest.fixture
-def patient_list():
-    patient_list = []
-    for i in range(10):
-        patient = MyUser.objects.create_user(
-            username=f'Artur_Dudy_{i+1}',
-            first_name='Artur',
-            last_name='Duda',
-            email='ad@onet.pl',
-            tel_number='689346976',
-            status=3,
-            password='Dudy123'
-        )
-        patient_list.append(patient)
+def employee():
 
-    return patient_list
+    employee = User.objects.create_user(
+        email='employee_fixture@onet.pl', 
+        first_name='Employee', 
+        last_name='Employee', 
+        phone='123456789', 
+        status=2
+        )
+
+    return employee
+
+
+@pytest.fixture
+def patient_list():
+
+    for i in range(10):
+        User.objects.create_user(
+            first_name='Patient',
+            last_name=f'Patient{i}',
+            email=f'patient{i}@onet.pl',
+            phone='689346976',
+            status=3
+        )
+        
+    return User.objects.filter(status=3).order_by('last_name')
+
+
+@pytest.fixture
+def employee_list():
+
+    for i in range(5):
+        User.objects.create_user(
+            first_name='Employee',
+            last_name='Employee',
+            email=f'employee{i}@onet.pl',
+            phone='689346976',
+            status=2
+        )
+        
+    return User.objects.filter(status=2)
+
+
+@pytest.fixture
+def user_list():
+
+    for i in range(30):
+        User.objects.create_user(
+            first_name='User',
+            last_name='User',
+            email=f'user{i}@onet.pl',
+            phone='689346976',
+            status=1 if i < 5 else 2 if i < 10 else 3
+        )
+
+    return User.objects.all()

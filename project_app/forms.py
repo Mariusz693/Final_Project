@@ -55,16 +55,20 @@ class UserPasswordUpdateForm(forms.Form):
     password_check = forms.CharField(label='Poprzenie hasło', max_length=64, widget=forms.PasswordInput())
     password_new = forms.CharField(label='Nowe hasło', max_length=64, widget=forms.PasswordInput())
     password_repeat = forms.CharField(label='Powtórz hasło', max_length=64, widget=forms.PasswordInput())
-    email = forms.CharField(widget=forms.HiddenInput())
+
+    def __init__(self, *args, **kwargs):
+        
+        self.email = kwargs.pop('email')
+
+        super().__init__(*args, **kwargs)
 
     def clean(self):
 
         cleaned_data = super().clean()
-        
+
         password_check = cleaned_data['password_check']
         password_new = cleaned_data['password_new']
         password_repeat = cleaned_data['password_repeat']
-        email = cleaned_data['email']
 
         if validate_password(password_new):
             self.add_error('password_new', validate_password(password_new))
@@ -72,7 +76,7 @@ class UserPasswordUpdateForm(forms.Form):
         if password_new != password_repeat:
             self.add_error('password_repeat', 'Nowe hasła róźnią się od siebie')
 
-        if not authenticate(email=email, password=password_check):
+        if not authenticate(email=self.email, password=password_check):
             self.add_error('password_check', 'Błędne hasło')
 
 

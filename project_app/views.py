@@ -156,7 +156,7 @@ class UserCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     def test_func(self):
         
         return self.request.user.status == 1
-
+    
     def get_success_url(self, user):
        
         if user.status == 2:
@@ -221,9 +221,9 @@ class UserDeleteView(LoginRequiredMixin, DeleteView):
    
     def get_object(self):
 
-        if self.request.user.status == 1 and self.request.GET.get('user_id'):
+        if self.request.user.status == 1 and self.request.GET.get('pk'):
         
-            return get_object_or_404(User, id=self.request.GET.get('user_id'))
+            return get_object_or_404(User, id=self.request.GET.get('pk'))
         
         return self.request.user
 
@@ -291,12 +291,12 @@ class UserPasswordUpdateView(LoginRequiredMixin, FormView):
     template_name = 'user_password_update.html'
     success_url = reverse_lazy('user-details')
 
-    def get_initial(self):
+    def get_form_kwargs(self, *args, **kwargs):
         
-        initial = super().get_initial()
-        initial['email'] = self.request.user.email
+        kwargs = super().get_form_kwargs(*args, **kwargs)
+        kwargs['email'] = self.request.user.email
         
-        return initial
+        return kwargs
 
     def form_valid(self, form):
     

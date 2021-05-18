@@ -48,7 +48,8 @@ def employee():
         first_name='Employee', 
         last_name='Employee', 
         phone='123456789', 
-        status=2
+        status=2,
+        password='Employee_123'
         )
 
     return employee
@@ -57,7 +58,7 @@ def employee():
 @pytest.fixture
 def patient_list():
 
-    for i in range(10):
+    for i in range(8):
         User.objects.create_user(
             first_name='Patient',
             last_name=f'Patient{i}',
@@ -72,7 +73,7 @@ def patient_list():
 @pytest.fixture
 def employee_list():
 
-    for i in range(5):
+    for i in range(8):
         User.objects.create_user(
             first_name='Employee',
             last_name='Employee',

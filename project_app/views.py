@@ -40,11 +40,7 @@ class UserLoginView(FormView):
 
     def get_success_url(self):
     	
-        if self.request.GET.get('next'):
-
-            return self.request.GET.get('next')
-
-        return reverse_lazy('index')
+        return self.request.GET.get('next') or reverse_lazy('index')
 
     def form_valid(self, form):
 
@@ -163,7 +159,7 @@ class UserCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
             
             return reverse_lazy('employee-list')
     
-        elif user.status == 3:    
+        if user.status == 3:    
             
             return reverse_lazy('patient-list')
         
@@ -175,8 +171,7 @@ class UserCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         status = self.request.GET.get('status')
         
         if status:
-            status = 2 if status == 'employee' else 3 
-            initial['status'] = status
+            initial['status'] = 2 if status == 'employee' else 3 
         
         return initial
     
@@ -227,6 +222,10 @@ class UserDeleteView(LoginRequiredMixin, DeleteView):
         
         return self.request.user
 
+    def get_success_url(self):
+    
+        return self.request.GET.get('next') or reverse_lazy('index')
+    
     def delete(self, request, *args, **kwargs):
         
         try:
@@ -242,17 +241,7 @@ class UserDeleteView(LoginRequiredMixin, DeleteView):
             )
         
             return self.render_to_response(context)
- 
-    def get_success_url(self):
-    
-        next_url = self.request.GET.get('next')
-        
-        if next_url:  
-
-            return next_url    
-    
-        return reverse_lazy('index')
-        
+     
 
 class UserUpdateView(LoginRequiredMixin, UpdateView):
     """
@@ -322,11 +311,8 @@ class UserPasswordSetView(FormView):
         token = self.request.GET.get('token')    
         user_unique_token = get_object_or_404(UserUniqueToken, token=token)
         user = user_unique_token.user
-
-        if user.is_active == False:
-            user.is_active = True
-        
         password = form.cleaned_data['password_new']
+        user.is_active = True
         user.set_password(password)
         user.save()
         user_unique_token.delete()
@@ -475,9 +461,7 @@ class ReservationAddView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
 
     def get_success_url(self):
 
-        next_url = self.request.GET.get('next')
-        
-        return next_url    
+        return self.request.GET.get('next') or reverse_lazy('reservation')
     
     def get_form_kwargs(self, *args, **kwargs):
         
@@ -503,9 +487,7 @@ class ReservationUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView)
 
     def get_success_url(self):
 
-        next_url = self.request.GET.get('next')
-        
-        return next_url    
+        return self.request.GET.get('next') or reverse_lazy('reservation')
     
     def form_valid(self, form):
         
@@ -534,9 +516,7 @@ class ReservationDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView)
 
     def get_success_url(self):
 
-        next_url = self.request.GET.get('next')
-        
-        return next_url    
+        return self.request.GET.get('next') or reverse_lazy('reservation')
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -546,6 +526,7 @@ class TimetableView(LoginRequiredMixin, UserPassesTestMixin, View):
     Only for user with status admin
     """
     def test_func(self):
+        
         return self.request.user.status == 1
 
     def get(self, request):

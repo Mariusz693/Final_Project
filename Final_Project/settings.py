@@ -81,14 +81,6 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 DATE_FORMAT = 'Y-m-d'
 
-# DATE_INPUT_FORMATS = ['YY-MM-DD']
-# import django.conf.global_settings
-
-# DATE_INPUT_FORMATS = [
-#     *django.conf.global_settings.DATE_INPUT_FORMATS,
-#     'YY-MM-DD'
-# ]
-
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
 

@@ -31,6 +31,9 @@
                     {% if message == 'actually_patient' %}
                         <a href="{% url 'patient-list'%}" class="btn btn-success">Wszyscy</a>
                         <a href="{% url 'patient-list'%}?search=actually_patient" class="btn btn-outline-success">Obecni</a>
+                    {% elif message %}
+                        <a href="{% url 'patient-list'%}" class="btn btn-success">Wszyscy</a>
+                        <a href="{% url 'patient-list'%}?search=actually_patient" class="btn btn-success">Obecni</a>
                     {% else %}
                         <a href="{% url 'patient-list'%}" class="btn btn-outline-success">Wszyscy</a>
                         <a href="{% url 'patient-list'%}?search=actually_patient" class="btn btn-success">Obecni</a>

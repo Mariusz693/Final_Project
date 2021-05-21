@@ -1,4 +1,6 @@
 import pytest
+
+from django.urls import reverse_lazy
 from project_app.models import User, Reservation, Timetable, UserUniqueToken
 
 
@@ -9,7 +11,7 @@ def test_login(client, admin):
         'email': 'admin_fixture@onet.pl',
         'password': 'Admin_123'
     }
-    response = client.post('/login/', post_data)
+    response = client.post(reverse_lazy('login'), post_data)
     assert response.status_code == 302
 
 
@@ -26,7 +28,7 @@ def test_user_add_by_admin(client, admin):
         'status': 3
     }
     assert User.objects.filter(status=3).count() == 0  # check databade
-    response = client.post('/user_add/', post_data_patient)
+    response = client.post(reverse_lazy('user-add'), post_data_patient)
     assert User.objects.filter(status=3).count() == 1
     assert response.status_code == 302
     
@@ -38,7 +40,7 @@ def test_user_add_by_admin(client, admin):
         'status': 2
     }
     assert User.objects.filter(status=2).count() == 0  # Check database
-    response = client.post('/user_add/', post_data_employee)
+    response = client.post(reverse_lazy('user-add'), post_data_employee)
     assert User.objects.filter(status=2).count() == 1
     assert response.status_code == 302
     
@@ -50,7 +52,7 @@ def test_user_add_by_admin(client, admin):
         'status': 1
     }
     assert User.objects.filter(status=1).count() == 1  # Check database
-    response = client.post('/user_add/', post_data_admin)
+    response = client.post(reverse_lazy('user-add'), post_data_admin)
     assert User.objects.filter(status=1).count() == 2
     assert response.status_code == 302
     
@@ -69,25 +71,32 @@ def test_user_add_by_patient(client, patient):
         'phone': '689346976',
         'status': 1,
     }
-    response = client.post('/user_add/', post_data)
+    response = client.post(reverse_lazy('user-add'), post_data)
     assert User.objects.filter(status=1).count() == 0
     assert response.status_code == 403
     client.logout()
 
 
 @pytest.mark.django_db
-def test_user_delete(client, patient, employee):
+def test_user_delete(client, admin, patient, employee):
+
+    client.login(email='admin_fixture@onet.pl', password='Admin_123')
+    assert User.objects.filter(status=1).count() == 1
+    response = client.post(reverse_lazy('user-delete'))
+    assert User.objects.filter(status=1).count() == 1
+    assert response.status_code == 200
+    client.logout()
 
     client.login(email='patient_fixture@onet.pl', password='Patient_123')
     assert User.objects.filter(status=3).count() == 1
-    response = client.post(f'/user_delete/')
+    response = client.post(reverse_lazy('user-delete'))
     assert User.objects.filter(status=3).count() == 0
     assert response.status_code == 302
 
     client.login(email='employee_fixture@onet.pl', password='Employee_123')
     assert User.objects.filter(status=2).count() == 1
-    response = client.post(f'/user_delete/')
-    assert User.objects.filter(status=1).count() == 0
+    response = client.post(reverse_lazy('user-delete'))
+    assert User.objects.filter(status=2).count() == 0
     assert response.status_code == 302
 
 
@@ -98,27 +107,16 @@ def test_user_delete_by_admin(client, admin, employee_list, patient_list):
     assert User.objects.all().count() == 17
 
     assert User.objects.filter(status=3).count() == 8
-    response = client.post(f'/user_delete/?pk={patient_list.first().id}')
+    response = client.post(f"{reverse_lazy('user-delete')}?pk={patient_list.first().id}")
     assert User.objects.filter(status=3).count() == 7
     assert response.status_code == 302
 
     assert User.objects.filter(status=2).count() == 8
-    response = client.post(f'/user_delete/?pk={employee_list.first().id}')
+    response = client.post(f"{reverse_lazy('user-delete')}?pk={employee_list.first().id}")
     assert User.objects.filter(status=2).count() == 7
     assert response.status_code == 302
     
     assert User.objects.all().count() == 15
-    client.logout()
-
-
-@pytest.mark.django_db
-def test_user_admin(client, admin):
-
-    client.login(email='admin_fixture@onet.pl', password='Admin_123')
-    assert User.objects.filter(status=1).count() == 1
-    response = client.post(f'/user_delete/')
-    assert User.objects.filter(status=1).count() == 1
-    assert response.status_code == 200
     client.logout()
 
 
@@ -132,7 +130,7 @@ def test_user_update(client, patient):
         'email': 'new_email@onet.pl',
         'phone': '689746976'
     }
-    response = client.post(f'/user_update/', post_data)
+    response = client.post(reverse_lazy('user-update'), post_data)
     assert response.status_code == 302
     patient_obj = User.objects.get(id=patient.id)
     assert patient_obj.first_name == post_data['first_name']
@@ -151,7 +149,7 @@ def test_password_update(client, admin):
         'password_new': 'Admin_1234',
         'password_repeat': 'Admin_1234'
     }
-    response = client.post('/user_password_update/', post_data)
+    response = client.post(reverse_lazy('user-password-update'), post_data)
     assert response.status_code == 302
     client.logout()
     assert client.login(email='admin_fixture@onet.pl', password=post_data['password_new'])
@@ -166,7 +164,7 @@ def test_password_set(client, patient_list):
         'password_repeat': 'Patient_1234'
     }
     new_token = UserUniqueToken.objects.create(user=patient)
-    response = client.post(f'/user_password_set/?token={new_token.token}', post_data)
+    response = client.post(f"{reverse_lazy('user-password-set')}?token={new_token.token}", post_data)
     assert response.status_code == 302
     assert client.login(email=patient.email, password=post_data['password_new'])
 
@@ -176,7 +174,7 @@ def test_password_reset(client, patient_list):
 
     patient = patient_list.first()
     assert UserUniqueToken.objects.all().count() == 0
-    response = client.post('/user_password_reset/', {'email': patient.email})
+    response = client.post(reverse_lazy('user-password-reset'), {'email': patient.email})
     assert response.status_code == 302
     assert UserUniqueToken.objects.all().count() == 1
     assert UserUniqueToken.objects.all().first().user == patient
@@ -186,7 +184,7 @@ def test_password_reset(client, patient_list):
 def test_patient_list(client, admin, patient_list):
 
     client.login(email=admin.email, password='Admin_123')
-    response = client.get('/patient_list/')
+    response = client.get(reverse_lazy('patient-list'))
     assert response.status_code == 200
     assert response.context['object_list'][0] == patient_list[0]
     assert response.context['object_list'][1] == patient_list[1]
@@ -203,7 +201,7 @@ def test_patient_list(client, admin, patient_list):
 def test_employee_list(client, admin, employee_list):
 
     client.login(email=admin.email, password='Admin_123')
-    response = client.get('/employee_list/')
+    response = client.get(reverse_lazy('employee-list'))
     assert response.status_code == 200
     assert response.context['object_list'][0] == employee_list[0]
     assert response.context['object_list'][1] == employee_list[1]
@@ -220,7 +218,7 @@ def test_employee_list(client, admin, employee_list):
 def test_user_detail(client, admin, patient, employee):
 
     client.login(email=admin.email, password='Admin_123')
-    response = client.get(f'/user_details/')
+    response = client.get(reverse_lazy('user-details'))
     assert response.status_code == 200
     response_context = response.context['object']
     assert response_context.first_name == admin.first_name
@@ -231,7 +229,7 @@ def test_user_detail(client, admin, patient, employee):
     client.logout()
 
     client.login(email=patient.email, password='Patient_123')
-    response = client.get(f'/user_details/')
+    response = client.get(reverse_lazy('user-details'))
     assert response.status_code == 200
     response_context = response.context['object']
     assert response_context.first_name == patient.first_name
@@ -242,7 +240,7 @@ def test_user_detail(client, admin, patient, employee):
     client.logout()
 
     client.login(email=employee.email, password='Employee_123')
-    response = client.get(f'/user_details/')
+    response = client.get(reverse_lazy('user-details'))
     assert response.status_code == 200
     response_context = response.context['object']
     assert response_context.first_name == employee.first_name

@@ -1,7 +1,7 @@
 import pytest
-from random import randint
+
 from django.test import Client
-from project_app.models import User, Reservation, Timetable
+from project_app.models import User
 
 
 @pytest.fixture
@@ -83,18 +83,3 @@ def employee_list():
         )
         
     return User.objects.filter(status=2)
-
-
-@pytest.fixture
-def user_list():
-
-    for i in range(30):
-        User.objects.create_user(
-            first_name='User',
-            last_name='User',
-            email=f'user{i}@onet.pl',
-            phone='689346976',
-            status=1 if i < 5 else 2 if i < 10 else 3
-        )
-
-    return User.objects.all()

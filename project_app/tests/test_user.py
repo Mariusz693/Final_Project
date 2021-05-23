@@ -1,7 +1,7 @@
 import pytest
 
 from django.urls import reverse_lazy
-from project_app.models import User, Reservation, Timetable, UserUniqueToken
+from project_app.models import User, UserUniqueToken
 
 
 @pytest.mark.django_db

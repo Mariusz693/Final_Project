@@ -216,5 +216,6 @@ venv/*
 
 local_settings.py
 
+.vscode/
 
 # End of https://www.gitignore.io/api/python,pycharm

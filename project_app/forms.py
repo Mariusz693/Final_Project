@@ -3,11 +3,12 @@ import datetime
 from django import forms
 from django.contrib.auth import authenticate
 from django.db.models import Q
-from django.core.exceptions import NON_FIELD_ERRORS
-from django.core.validators import EmailValidator
+from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
+from django.core.validators import EmailValidator, validate_email
+from django.core.mail import send_mail
 
 from .validators import validate_password, validate_phone
-from .models import User, Reservation, Room, Timetable
+from .models import User, Reservation, Room, Timetable, UserUniqueToken
 from .utils import change_day_to_date
 
 
@@ -18,7 +19,7 @@ class DateInput(forms.DateInput):
 
 class UserLoginForm(forms.Form):
 
-    email = forms.EmailField(label='Email', max_length=64)
+    email = forms.CharField(label='Email', max_length=64, widget=forms.EmailInput())
     password = forms.CharField(label='Hasło', max_length=64, widget=forms.PasswordInput())
 
     def clean(self):
@@ -27,19 +28,25 @@ class UserLoginForm(forms.Form):
         
         email = cleaned_data['email']
         password = cleaned_data['password']
-        user = User.objects.filter(email=email).first()
-
-        if user:
-            
-            if not user.is_active:
-                self.add_error('email', 'Twoje konto nie zostało jeszcze aktywowane, sprawdź pocztę email')
-            
-            elif not authenticate(email=email, password=password):
-                self.add_error('password', 'Błędne hasło')
         
+        try:
+            validate_email(email)
+        except ValidationError as e:
+            self.add_error('email', e)
         else:
+            user = User.objects.filter(email=email).first()
 
-            self.add_error('email', 'Email nie zarejestrowany w bazie danych')
+            if user:
+                
+                if not user.is_active:
+                    self.add_error('email', 'Twoje konto nie zostało jeszcze aktywowane, sprawdź pocztę email')
+                
+                elif not authenticate(email=email, password=password):
+                    self.add_error('password', 'Błędne hasło')
+            
+            else:
+
+                self.add_error('email', 'Email nie zarejestrowany w bazie danych')
 
     def authenticate_user(self):
 
@@ -101,16 +108,32 @@ class UserPasswordSetForm(forms.Form):
 
 class UserPasswordResetForm(forms.Form):
 
-    email = forms.EmailField(label='Email', max_length=64)
+    email = forms.CharField(label='Email', max_length=64, widget=forms.EmailInput())
 
     def clean(self):
 
         cleaned_data = super().clean()
-        
         email = cleaned_data['email']
 
-        if User.objects.filter(email=email).count() != 1:
-            self.add_error('email', 'Brak konta o podanym adresie email')
+        try:
+            validate_email(email)
+        except ValidationError as e:
+            self.add_error('email', e)
+        else:
+            self.user = User.objects.filter(email=email).first()
+            if self.user is None:
+                self.add_error('email', 'Brak konta o podanym adresie email')
+
+    def send_mail(self, url):
+        
+        new_token = UserUniqueToken.objects.create(user=self.user)
+        send_mail(
+            subject='Resetowanie hasla',
+            message=f'''Twój link do ustawienia nowego hasła:
+                {url}?token={new_token.token}''',
+            from_email='webmaster@localhost',
+            recipient_list=[self.user.email],
+        )
 
 
 class ReservationAddForm(forms.ModelForm):

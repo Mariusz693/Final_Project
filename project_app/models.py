@@ -8,19 +8,14 @@ from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
 from .managers import CustomUserManager
 from .validators import validate_phone
 
-HOUR_CHOICES = (
-    (1, '8:00 - 11:00'),
-    (2, '11:00 - 14:00'),
-    (3, '14:00 - 17:00')
-)
-
-STATUS_CHOICE = (
-    (1, 'Administrator'),
-    (2, 'Rehabilitant'),
-    (3, 'Pacjent')
-)
 
 class User(AbstractUser):
+
+    STATUS_CHOICE = (
+        (1, 'Administrator'),
+        (2, 'Rehabilitant'),
+        (3, 'Pacjent')
+    )
     
     username = None
     first_name = models.CharField(verbose_name='Imię', max_length=64)
@@ -98,6 +93,12 @@ class Reservation(models.Model):
 
 class Timetable(models.Model):
     
+    HOUR_CHOICES = (
+        (1, '8:00 - 11:00'),
+        (2, '11:00 - 14:00'),
+        (3, '14:00 - 17:00')
+    )
+
     patient = models.ForeignKey(User, limit_choices_to={'status': 3, 'is_active': True}, verbose_name='Pacjent', on_delete=models.CASCADE, related_name='patient_timetable')
     employee = models.ForeignKey(User, limit_choices_to={'status': 2, 'is_active': True}, verbose_name='Rehabilitant', on_delete=models.CASCADE, related_name='employee_timetable')
     day_timetable = models.DateField(verbose_name='Dzień')
@@ -116,6 +117,7 @@ class Timetable(models.Model):
 
         if timetable:                
             raise ValidationError({NON_FIELD_ERRORS: 'Grafik zajety'})
+
 
 class UserUniqueToken(models.Model):
 

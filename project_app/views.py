@@ -13,7 +13,7 @@ from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.core.exceptions import ValidationError
 
-from .models import User, Room, Reservation, Timetable, UserUniqueToken, HOUR_CHOICES
+from .models import User, Room, Reservation, Timetable, UserUniqueToken
 from .forms import UserLoginForm, UserPasswordUpdateForm, UserPasswordSetForm, UserPasswordResetForm, ReservationAddForm, \
      ReservationUpdateForm, TimetableAddForm, TimetableUpdateForm, ContactForm
 from .utils import generate_list, generate_month, generate_week_timetable, change_day_to_date, set_day_look
@@ -329,22 +329,10 @@ class UserPasswordResetView(FormView):
 
     def form_valid(self, form):
 
-        user = User.objects.get(email=form.cleaned_data['email'])
-
-        self.send_mail(user)
+        url = f"{self.request.get_host()}{reverse_lazy('user-password-set')}"
+        form.send_mail(url)
 
         return super().form_valid(form)
-
-    def send_mail(self, user):
-        
-        new_token = UserUniqueToken.objects.create(user=user)
-        send_mail(
-            subject='Resetowanie hasla',
-            message=f'''Twój link do ustawienia nowego hasła:
-                {self.request.get_host()}{reverse_lazy('user-password-set')}?token={new_token.token}''',
-            from_email='webmaster@localhost',
-            recipient_list=[user.email],
-        )
 
 
 class ReservationView(LoginRequiredMixin, UserPassesTestMixin, View):
@@ -612,7 +600,7 @@ class UserTimetableView(LoginRequiredMixin, UserPassesTestMixin, View):
         week_look = request.GET.get('week_look')
         week_look = set_day_look(week_look)
         all_week = generate_week_timetable(week_look)
-        timetable_week = [[hour[1]] for hour in HOUR_CHOICES]
+        timetable_week = [[hour[1]] for hour in Timetable.HOUR_CHOICES]
         
         for i in range(3):
         

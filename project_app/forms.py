@@ -1,13 +1,11 @@
 import datetime
 
-
 from django import forms
 from django.contrib.auth import authenticate
 from django.db.models import Q
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from django.core.validators import EmailValidator, validate_email
 from django.core.mail import send_mail
-
 
 from .validators import validate_password, validate_phone
 from .models import User, Reservation, Room, Timetable, UserUniqueToken

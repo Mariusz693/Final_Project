@@ -1,6 +1,6 @@
 import datetime
 
-from calendar import LocaleHTMLCalendar, weekday
+from calendar import LocaleHTMLCalendar
 
 
 DAY_NAMES = ('Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd')
@@ -64,8 +64,8 @@ def set_day_look(day_look=None):
     else:
         day_look = datetime.date.today()
     
-    day_of_week = weekday(day_look.year, day_look.month, day_look.day)
-    
+    day_of_week = day_look.weekday()
+
     if day_of_week == 5:
         day_look = day_look + datetime.timedelta(days=2)
     elif day_of_week == 6:
@@ -76,7 +76,7 @@ def set_day_look(day_look=None):
 
 def generate_week_timetable(my_day):
 
-    day_of_week = weekday(my_day.year, my_day.month, my_day.day)
+    day_of_week = my_day.weekday()
     week_start = my_day - datetime.timedelta(days=day_of_week)
     week_list = [week_start + datetime.timedelta(days=i) for i in range(5)]
     
